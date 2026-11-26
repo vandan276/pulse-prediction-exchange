@@ -39,6 +39,7 @@ import { RoundHistoryPanel } from './components/RoundHistoryPanel';
 import { MasterWalletView } from './components/MasterWalletView';
 import { LeaderboardView } from './components/LeaderboardView';
 import { OriginalsHub } from './components/originals/OriginalsHub';
+import { CashierModal } from './components/CashierModal';
 import { UserModal } from './components/UserModal';
 import { ToastStack } from './components/ToastStack';
 import { getStandaloneRuntime, isStandaloneMode } from './standalone/liveRuntime';
@@ -103,6 +104,8 @@ export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userBets, setUserBets] = useState<UserBetRecord[]>([]);
   const [userModalOpen, setUserModalOpen] = useState(false);
+  const [cashierOpen, setCashierOpen] = useState(false);
+  const [cashierTab, setCashierTab] = useState<'deposit' | 'withdraw' | 'history'>('deposit');
   const [placingBet, setPlacingBet] = useState(false);
   const [topUpBusy, setTopUpBusy] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -607,6 +610,10 @@ export default function App() {
         masterWallet={masterWallet}
         user={user}
         onOpenUserModal={() => setUserModalOpen(true)}
+        onOpenCashier={(tab) => {
+          setCashierTab(tab);
+          setCashierOpen(true);
+        }}
         onTopUp={handleTopUp}
         onToggleBots={handleToggleBots}
         topUpBusy={topUpBusy}
@@ -876,6 +883,15 @@ export default function App() {
         onClose={() => setUserModalOpen(false)}
         currentUser={user}
         onLogin={loginUsername}
+      />
+
+      <CashierModal
+        isOpen={cashierOpen}
+        initialTab={cashierTab}
+        onClose={() => setCashierOpen(false)}
+        user={user}
+        onUserUpdated={setUser}
+        onToast={pushToast}
       />
 
       <ToastStack toasts={toasts} />

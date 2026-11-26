@@ -160,6 +160,27 @@ function createDatabase(dbFilePath) {
     CREATE INDEX IF NOT EXISTS idx_originals_recent ON originals_bets(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_originals_user ON originals_bets(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_originals_game ON originals_bets(game, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS payment_transactions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      rail TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      asset TEXT NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      fee_cents INTEGER NOT NULL DEFAULT 0,
+      net_cents INTEGER NOT NULL,
+      destination TEXT,
+      provider_ref TEXT NOT NULL,
+      status TEXT NOT NULL,
+      metadata_json TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_payments_user ON payment_transactions(user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_payments_ref ON payment_transactions(provider_ref);
   `);
 
   function runTransaction(fn) {
@@ -1042,6 +1063,269 @@ function createDatabase(dbFilePath) {
     }));
   }
 
+  function formatPaymentRow(row) {
+    if (!row) return null;
+    return {
+      id: row.id,
+      userId: row.user_id,
+      type: row.type,
+      rail: row.rail,
+      provider: row.provider,
+      asset: row.asset,
+      amountCents: Number(row.amount_cents),
+      feeCents: Number(row.fee_cents),
+      netCents: Number(row.net_cents),
+      destination: row.destination || null,
+      providerRef: row.provider_ref,
+      status: row.status,
+      metadata: row.metadata_json ? JSON.parse(row.metadata_json) : {},
+      createdAt: Number(row.created_at),
+      updatedAt: Number(row.updated_at),
+    };
+  }
+
+  function createDepositRecord({
+    id,
+    userId,
+    rail,
+    provider,
+    asset,
+    amountCents,
+    feeCents,
+    netCents,
+    destination,
+    providerRef,
+    metadata,
+  }) {
+    const now = Date.now();
+    db.prepare(`
+      INSERT INTO payment_transactions (
+        id, user_id, type, rail, provider, asset,
+        amount_cents, fee_cents, net_cents, destination,
+        provider_ref, status, metadata_json, created_at, updated_at
+      ) VALUES (?, ?, 'DEPOSIT', ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
+    `).run(
+      id,
+      userId,
+      rail,
+      provider,
+      asset,
+      amountCents,
+      feeCents,
+      netCents,
+      destination || null,
+      providerRef,
+      JSON.stringify(metadata || {}),
+      now,
+      now
+    );
+    return formatPaymentRow(
+      db.prepare('SELECT * FROM payment_transactions WHERE id = ?').get(id)
+    );
+  }
+
+  function completeDepositRecord(transactionId, externalTxHash) {
+    return runTransaction(() => {
+      const row = db
+        .prepare('SELECT * FROM payment_transactions WHERE id = ?')
+        .get(transactionId);
+      if (!row) throw new Error('Deposit transaction not found');
+      if (row.type !== 'DEPOSIT') throw new Error('Transaction is not a deposit');
+      if (row.status === 'COMPLETED') {
+        return {
+          alreadyCompleted: true,
+          transaction: formatPaymentRow(row),
+          user: getUserById(row.user_id),
+        };
+      }
+      if (row.status !== 'PENDING' && row.status !== 'PROCESSING') {
+        throw new Error(`Deposit cannot be completed from status ${row.status}`);
+      }
+
+      const userRow = db.prepare('SELECT * FROM users WHERE id = ?').get(row.user_id);
+      if (!userRow) throw new Error('User not found');
+
+      const now = Date.now();
+      const nextBal = Number(userRow.balance_cents) + Number(row.net_cents);
+      const nextRef = externalTxHash || row.provider_ref;
+
+      db.prepare(`
+        UPDATE payment_transactions
+        SET status = 'COMPLETED', provider_ref = ?, updated_at = ?
+        WHERE id = ?
+      `).run(nextRef, now, transactionId);
+
+      db.prepare('UPDATE users SET balance_cents = ? WHERE id = ?').run(
+        nextBal,
+        row.user_id
+      );
+
+      db.prepare(`
+        INSERT INTO wallet_transactions (id, user_id, type, amount_cents, balance_after_cents, round_id, note, created_at)
+        VALUES (?, ?, 'DEPOSIT', ?, ?, ?, ?, ?)
+      `).run(
+        `tx_${crypto.randomBytes(6).toString('hex')}`,
+        row.user_id,
+        Number(row.net_cents),
+        nextBal,
+        transactionId,
+        `Deposit via ${row.asset} (${row.provider})`,
+        now
+      );
+
+      return {
+        alreadyCompleted: false,
+        transaction: formatPaymentRow(
+          db.prepare('SELECT * FROM payment_transactions WHERE id = ?').get(transactionId)
+        ),
+        user: getUserById(row.user_id),
+      };
+    });
+  }
+
+  function createWithdrawalRecord({
+    id,
+    userId,
+    rail,
+    provider,
+    asset,
+    amountCents,
+    feeCents,
+    netCents,
+    destination,
+    providerRef,
+    metadata,
+  }) {
+    return runTransaction(() => {
+      const userRow = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+      if (!userRow) throw new Error('Player account not found');
+      const currentBal = Number(userRow.balance_cents);
+      if (currentBal < amountCents) {
+        throw new Error('Insufficient wallet balance for this withdrawal.');
+      }
+
+      const nextBal = currentBal - amountCents;
+      const now = Date.now();
+
+      db.prepare('UPDATE users SET balance_cents = ? WHERE id = ?').run(nextBal, userId);
+
+      db.prepare(`
+        INSERT INTO payment_transactions (
+          id, user_id, type, rail, provider, asset,
+          amount_cents, fee_cents, net_cents, destination,
+          provider_ref, status, metadata_json, created_at, updated_at
+        ) VALUES (?, ?, 'WITHDRAWAL', ?, ?, ?, ?, ?, ?, ?, ?, 'PROCESSING', ?, ?, ?)
+      `).run(
+        id,
+        userId,
+        rail,
+        provider,
+        asset,
+        amountCents,
+        feeCents,
+        netCents,
+        destination,
+        providerRef,
+        JSON.stringify(metadata || {}),
+        now,
+        now
+      );
+
+      db.prepare(`
+        INSERT INTO wallet_transactions (id, user_id, type, amount_cents, balance_after_cents, round_id, note, created_at)
+        VALUES (?, ?, 'WITHDRAWAL', ?, ?, ?, ?, ?)
+      `).run(
+        `tx_${crypto.randomBytes(6).toString('hex')}`,
+        userId,
+        -amountCents,
+        nextBal,
+        id,
+        `Withdrawal via ${asset} to ${String(destination).slice(0, 18)}`,
+        now
+      );
+
+      return {
+        transaction: formatPaymentRow(
+          db.prepare('SELECT * FROM payment_transactions WHERE id = ?').get(id)
+        ),
+        user: getUserById(userId),
+      };
+    });
+  }
+
+  function updateWithdrawalStatus(transactionId, status, externalTxHash) {
+    return runTransaction(() => {
+      const row = db
+        .prepare('SELECT * FROM payment_transactions WHERE id = ?')
+        .get(transactionId);
+      if (!row) throw new Error('Withdrawal not found');
+      if (row.type !== 'WITHDRAWAL') throw new Error('Not a withdrawal');
+      if (row.status === 'COMPLETED' || row.status === 'FAILED' || row.status === 'CANCELLED') {
+        return {
+          transaction: formatPaymentRow(row),
+          user: getUserById(row.user_id),
+        };
+      }
+
+      const now = Date.now();
+      const nextRef = externalTxHash || row.provider_ref;
+      db.prepare(`
+        UPDATE payment_transactions
+        SET status = ?, provider_ref = ?, updated_at = ?
+        WHERE id = ?
+      `).run(status, nextRef, now, transactionId);
+
+      // Refund user automatically if withdrawal failed or was cancelled
+      if (status === 'FAILED' || status === 'CANCELLED') {
+        const userRow = db.prepare('SELECT balance_cents FROM users WHERE id = ?').get(row.user_id);
+        if (userRow) {
+          const refundedBal = Number(userRow.balance_cents) + Number(row.amount_cents);
+          db.prepare('UPDATE users SET balance_cents = ? WHERE id = ?').run(
+            refundedBal,
+            row.user_id
+          );
+          db.prepare(`
+            INSERT INTO wallet_transactions (id, user_id, type, amount_cents, balance_after_cents, round_id, note, created_at)
+            VALUES (?, ?, 'WITHDRAWAL_REFUND', ?, ?, ?, ?, ?)
+          `).run(
+            `tx_${crypto.randomBytes(6).toString('hex')}`,
+            row.user_id,
+            Number(row.amount_cents),
+            refundedBal,
+            transactionId,
+            `Withdrawal ${status.toLowerCase()} refund`,
+            now
+          );
+        }
+      }
+
+      return {
+        transaction: formatPaymentRow(
+          db.prepare('SELECT * FROM payment_transactions WHERE id = ?').get(transactionId)
+        ),
+        user: getUserById(row.user_id),
+      };
+    });
+  }
+
+  function getUserPayments(userId, limit = 30) {
+    const rows = db
+      .prepare(`
+        SELECT * FROM payment_transactions
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT ?
+      `)
+      .all(userId, limit);
+    return rows.map(formatPaymentRow);
+  }
+
+  function getPaymentById(transactionId) {
+    return formatPaymentRow(
+      db.prepare('SELECT * FROM payment_transactions WHERE id = ?').get(transactionId)
+    );
+  }
+
   function getLeaderboard(limit = 25) {
     const rows = db
       .prepare(`
@@ -1076,6 +1360,12 @@ function createDatabase(dbFilePath) {
     debitUserStake,
     settleOriginalBet,
     getRecentOriginalsBets,
+    createDepositRecord,
+    completeDepositRecord,
+    createWithdrawalRecord,
+    updateWithdrawalStatus,
+    getUserPayments,
+    getPaymentById,
     getLeaderboard,
     close,
   };

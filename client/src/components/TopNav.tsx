@@ -22,6 +22,7 @@ interface TopNavProps {
   masterWallet: MasterWalletSummary | null;
   user: UserProfile | null;
   onOpenUserModal: () => void;
+  onOpenCashier: (tab: 'deposit' | 'withdraw') => void;
   onTopUp: () => void;
   onToggleBots: () => void;
   topUpBusy: boolean;
@@ -37,9 +38,8 @@ export const TopNav: React.FC<TopNavProps> = ({
   masterWallet,
   user,
   onOpenUserModal,
-  onTopUp,
+  onOpenCashier,
   onToggleBots,
-  topUpBusy,
   theme,
   onToggleTheme,
 }) => {
@@ -207,13 +207,19 @@ export const TopNav: React.FC<TopNavProps> = ({
                 {formatUsd(user.balanceCents)}
               </span>
               <button
-                onClick={onTopUp}
-                disabled={topUpBusy}
-                title="Add +$500.00 play balance"
-                className="flex h-6 items-center gap-0.5 rounded-full bg-[#00E599]/15 px-2 font-mono text-[10px] font-bold text-[#00E599] transition hover:bg-[#00E599]/25 disabled:opacity-50"
+                onClick={() => onOpenCashier('deposit')}
+                title="Open Deposit & Withdrawal Gateway"
+                className="flex h-6 items-center gap-1 rounded-full bg-[#00E599] px-2.5 font-display text-[11px] font-extrabold text-[#040507] transition hover:brightness-110"
               >
-                <Plus className="h-3 w-3" />
-                500
+                <Plus className="h-3 w-3 stroke-[3]" />
+                Deposit
+              </button>
+              <button
+                onClick={() => onOpenCashier('withdraw')}
+                title="Withdraw funds"
+                className="hidden sm:flex h-6 items-center rounded-full bg-white/[0.06] px-2 font-display text-[11px] font-bold text-zinc-300 transition hover:bg-white/[0.12] hover:text-white"
+              >
+                Withdraw
               </button>
               <button
                 onClick={onOpenUserModal}

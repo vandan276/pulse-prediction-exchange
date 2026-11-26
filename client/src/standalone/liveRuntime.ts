@@ -218,6 +218,7 @@ class StandaloneRuntime {
   minesSession: any = null;
   towerSession: any = null;
   bjSession: any = null;
+  payments: any[] = [];
 
   crashState: CrashState;
   crashPoint = 2.4;
@@ -1454,6 +1455,107 @@ class StandaloneRuntime {
           return json(this._finishBj(s));
         }
         return json({ user: { ...this.users.get(s.userId)! }, session: this._serializeBj(s) });
+      }
+
+      // ==================== DEPOSIT & WITHDRAWAL GATEWAY ====================
+      const PAY_METHODS = [
+        { id: 'USDT-TRC20', rail: 'CRYPTO', label: 'USDT (TRC20)', network: 'TRON', minDepositCents: 1000, maxDepositCents: 10_000_000, minWithdrawCents: 1000, maxWithdrawCents: 5_000_000, depositFeeFlatCents: 0, withdrawFeeFlatCents: 100, eta: '~1–3 mins', placeholder: 'T... (TRON TRC20 wallet address)' },
+        { id: 'USDT-ERC20', rail: 'CRYPTO', label: 'USDT (ERC20)', network: 'Ethereum', minDepositCents: 2000, maxDepositCents: 10_000_000, minWithdrawCents: 2000, maxWithdrawCents: 5_000_000, depositFeeFlatCents: 0, withdrawFeeFlatCents: 300, eta: '~2–5 mins', placeholder: '0x... (Ethereum ERC20 address)' },
+        { id: 'USDT-POLYGON', rail: 'CRYPTO', label: 'USDT (Polygon)', network: 'Polygon POS', minDepositCents: 1000, maxDepositCents: 10_000_000, minWithdrawCents: 1000, maxWithdrawCents: 5_000_000, depositFeeFlatCents: 0, withdrawFeeFlatCents: 50, eta: '~30 secs', placeholder: '0x... (Polygon wallet address)' },
+        { id: 'BTC', rail: 'CRYPTO', label: 'Bitcoin (BTC)', network: 'Bitcoin Mainnet', minDepositCents: 2000, maxDepositCents: 10_000_000, minWithdrawCents: 2500, maxWithdrawCents: 5_000_000, depositFeeFlatCents: 0, withdrawFeeFlatCents: 250, eta: '~10 mins', placeholder: 'bc1q... (Bitcoin address)' },
+        { id: 'SOL', rail: 'CRYPTO', label: 'Solana (SOL)', network: 'Solana', minDepositCents: 1000, maxDepositCents: 10_000_000, minWithdrawCents: 1000, maxWithdrawCents: 5_000_000, depositFeeFlatCents: 0, withdrawFeeFlatCents: 25, eta: '~15 secs', placeholder: 'Solana wallet address' },
+        { id: 'UPI', rail: 'UPI', label: 'UPI Instant', network: 'NPCI / Razorpay', minDepositCents: 1000, maxDepositCents: 2_500_000, minWithdrawCents: 1000, maxWithdrawCents: 2_500_000, depositFeeFlatCents: 0, withdrawFeeFlatCents: 0, eta: 'Instant', placeholder: 'yourname@upi / phone@paytm' },
+        { id: 'CARD', rail: 'CARD', label: 'Visa / Mastercard', network: 'Stripe / Gateway', minDepositCents: 1000, maxDepositCents: 5_000_000, minWithdrawCents: 2000, maxWithdrawCents: 2_500_000, depositFeeFlatCents: 0, withdrawFeeFlatCents: 150, eta: 'Instant – 1 day', placeholder: 'Cardholder / Bank IBAN or Last 4' },
+        { id: 'BANK', rail: 'BANK', label: 'Bank Transfer (IMPS / Wire)', network: 'Direct Bank Rail', minDepositCents: 2500, maxDepositCents: 10_000_000, minWithdrawCents: 2500, maxWithdrawCents: 10_000_000, depositFeeFlatCents: 0, withdrawFeeFlatCents: 0, eta: '~15 mins – 1 day', placeholder: 'Account No. / IFSC or Routing' },
+      ];
+
+      if (path === '/api/payments/config') {
+        return json({ provider: 'sandbox', isSandbox: true, methods: PAY_METHODS });
+      }
+      if (path.startsWith('/api/payments/history/')) {
+        const uid = decodeURIComponent(path.slice('/api/payments/history/'.length));
+        return json({ transactions: this.payments.filter((p) => p.userId === uid) });
+      }
+      if (path === '/api/payments/deposit' && method === 'POST') {
+        const m = PAY_METHODS.find((x) => x.id === body.asset) || PAY_METHODS[0];
+        const amt = Math.round(Number(body.amountCents || 0));
+        if (amt < m.minDepositCents) return json({ error: `Minimum deposit is $${(m.minDepositCents / 100).toFixed(2)}` }, 400);
+        const dest =
+          m.id === 'USDT-TRC20'
+            ? `T${randHex(16).toUpperCase()}`
+            : m.id === 'UPI'
+            ? `pulse.pay@${randHex(3)}okaxis`
+            : `0x${randHex(20)}`;
+        const tx = {
+          id: `dep_${randHex(6)}`,
+          userId: body.userId,
+          type: 'DEPOSIT',
+          rail: m.rail,
+          provider: 'sandbox',
+          asset: m.id,
+          amountCents: amt,
+          feeCents: 0,
+          netCents: amt,
+          destination: dest,
+          providerRef: `GW-DEP-${randHex(4).toUpperCase()}`,
+          status: 'PENDING',
+          metadata: { network: m.network, eta: m.eta },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        this.payments.unshift(tx);
+        return json({ transaction: tx, isSandbox: true });
+      }
+      if (path === '/api/payments/deposit/confirm' && method === 'POST') {
+        const tx = this.payments.find((p) => p.id === body.transactionId);
+        if (!tx) return json({ error: 'Deposit not found' }, 404);
+        const u = this.users.get(tx.userId);
+        if (!u) return json({ error: 'User not found' }, 404);
+        if (tx.status !== 'COMPLETED') {
+          tx.status = 'COMPLETED';
+          tx.providerRef = `0x${randHex(16)}`;
+          tx.updatedAt = Date.now();
+          u.balanceCents += tx.netCents;
+          this._saveUser(u);
+          this.emit('user:updated', { ...u });
+        }
+        return json({ alreadyCompleted: false, transaction: tx, user: { ...u } });
+      }
+      if (path === '/api/payments/withdraw' && method === 'POST') {
+        const m = PAY_METHODS.find((x) => x.id === body.asset) || PAY_METHODS[0];
+        const amt = Math.round(Number(body.amountCents || 0));
+        if (amt < m.minWithdrawCents) return json({ error: `Minimum withdrawal is $${(m.minWithdrawCents / 100).toFixed(2)}` }, 400);
+        if (String(body.destination || '').trim().length < 5) return json({ error: 'Enter a valid payout destination' }, 400);
+        const u = this.users.get(body.userId);
+        if (!u) return json({ error: 'Sign in required' }, 401);
+        if (u.balanceCents < amt) return json({ error: 'Insufficient balance for withdrawal' }, 400);
+        u.balanceCents -= amt;
+        this._saveUser(u);
+        const tx = {
+          id: `wd_${randHex(6)}`,
+          userId: u.id,
+          type: 'WITHDRAWAL',
+          rail: m.rail,
+          provider: 'sandbox',
+          asset: m.id,
+          amountCents: amt,
+          feeCents: m.withdrawFeeFlatCents,
+          netCents: amt - m.withdrawFeeFlatCents,
+          destination: String(body.destination).trim(),
+          providerRef: `GW-WD-${randHex(4).toUpperCase()}`,
+          status: 'PROCESSING',
+          metadata: { network: m.network, eta: m.eta },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        this.payments.unshift(tx);
+        this.emit('user:updated', { ...u });
+        setTimeout(() => {
+          tx.status = 'COMPLETED';
+          tx.providerRef = m.rail === 'CRYPTO' ? `0x${randHex(16)}` : `UTR${Date.now().toString().slice(-10)}`;
+          tx.updatedAt = Date.now();
+        }, 2200);
+        return json({ transaction: tx, user: { ...u }, isSandbox: true });
       }
 
       return json({ error: `Unknown endpoint ${path}` }, 404);

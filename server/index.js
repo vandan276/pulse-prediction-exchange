@@ -18,6 +18,7 @@ const { PriceFeedService } = require('./services/priceFeed');
 const { GameEngine, roomKey, parseRoomKey } = require('./services/gameEngine');
 const { CrashEngine } = require('./services/crashEngine');
 const { OriginalsEngine } = require('./services/originalsEngine');
+const { PaymentGatewayService } = require('./services/paymentGateway');
 const {
   PUMP_CONFIGS,
   PLINKO_MULTIPLIERS,
@@ -50,6 +51,7 @@ const gameEngine = new GameEngine({
 });
 const crashEngine = new CrashEngine({ db, botsEnabled: true });
 const originalsEngine = new OriginalsEngine({ db });
+const paymentGateway = new PaymentGatewayService({ db });
 
 priceFeed.start();
 gameEngine.start();
@@ -83,6 +85,15 @@ originalsEngine.on('userUpdated', notifyUserSockets);
 originalsEngine.on('betSettled', (record) => {
   io.emit('originals:bet', record);
   io.emit('master_wallet:update', db.getMasterWalletSummary(50));
+});
+
+paymentGateway.on('userUpdated', notifyUserSockets);
+paymentGateway.on('paymentUpdated', ({ userId, transaction }) => {
+  for (const [socketId, meta] of socketMeta.entries()) {
+    if (meta.userId === userId) {
+      io.to(socketId).emit('payment:updated', transaction);
+    }
+  }
 });
 
 function broadcastGlobalStats() {
@@ -555,6 +566,89 @@ app.post('/api/originals/blackjack/action', (req, res) => {
   }
 });
 
+// ==================== DEPOSIT & WITHDRAWAL PAYMENT GATEWAY ====================
+
+app.get('/api/payments/config', (_req, res) => {
+  res.json(paymentGateway.getConfig());
+});
+
+app.get('/api/payments/history/:userId', (req, res) => {
+  const limit = Math.min(100, Number(req.query.limit || 30));
+  res.json({ transactions: db.getUserPayments(req.params.userId, limit) });
+});
+
+app.post('/api/payments/deposit', async (req, res) => {
+  try {
+    const { userId, asset, amountCents } = req.body || {};
+    if (!userId) return res.status(401).json({ error: 'Please sign in first' });
+    const result = await paymentGateway.createDeposit({ userId, asset, amountCents });
+    return res.json(result);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/payments/deposit/confirm', (req, res) => {
+  try {
+    const { transactionId, externalTxHash } = req.body || {};
+    const signature = req.headers['x-gateway-signature'];
+    const result = paymentGateway.confirmDeposit({
+      transactionId,
+      externalTxHash,
+      signature,
+      rawBody: req.body,
+    });
+    return res.json(result);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// Standard webhook endpoint for live external payment gateways (Stripe / Razorpay / NOWPayments / Custom)
+app.post('/api/payments/webhook', (req, res) => {
+  try {
+    const { event, transactionId, txHash, status } = req.body || {};
+    const signature = req.headers['x-gateway-signature'];
+    if (event === 'deposit.completed' || status === 'COMPLETED') {
+      const result = paymentGateway.confirmDeposit({
+        transactionId,
+        externalTxHash: txHash,
+        signature,
+        rawBody: req.body,
+      });
+      return res.json({ received: true, status: result.transaction.status });
+    }
+    if (event === 'withdrawal.failed' || event === 'withdrawal.completed') {
+      if (!paymentGateway.verifyWebhookSignature(req.body, signature)) {
+        return res.status(401).json({ error: 'Invalid webhook signature' });
+      }
+      const nextStatus = event === 'withdrawal.completed' ? 'COMPLETED' : 'FAILED';
+      const updated = db.updateWithdrawalStatus(transactionId, nextStatus, txHash);
+      notifyUserSockets(updated.user);
+      return res.json({ received: true, status: updated.transaction.status });
+    }
+    return res.json({ received: true });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/payments/withdraw', async (req, res) => {
+  try {
+    const { userId, asset, amountCents, destination } = req.body || {};
+    if (!userId) return res.status(401).json({ error: 'Please sign in first' });
+    const result = await paymentGateway.requestWithdrawal({
+      userId,
+      asset,
+      amountCents,
+      destination,
+    });
+    return res.json(result);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
 // Serve production frontend bundle if built
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
 if (fs.existsSync(clientDist)) {
@@ -575,6 +669,7 @@ function shutdown() {
   priceFeed.stop();
   gameEngine.stop();
   crashEngine.stop();
+  paymentGateway.stop();
   db.close();
   httpServer.close(() => process.exit(0));
 }
