@@ -9,8 +9,10 @@ import {
   Coins,
   Copy,
   CreditCard,
+  ExternalLink,
   History,
   Landmark,
+  RefreshCw,
   ShieldCheck,
   Smartphone,
   X,
@@ -31,6 +33,7 @@ export interface PaymentMethod {
   withdrawFeeFlatCents: number;
   eta: string;
   placeholder: string;
+  liveGateway?: boolean;
 }
 
 export interface PaymentTransaction {
@@ -46,7 +49,15 @@ export interface PaymentTransaction {
   destination: string | null;
   providerRef: string;
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
-  metadata?: { network?: string; eta?: string; checkoutUrl?: string | null };
+  metadata?: {
+    network?: string;
+    eta?: string;
+    checkoutUrl?: string | null;
+    confirmations?: number;
+    requiredConfirmations?: number;
+    isLive?: boolean;
+    liveStatus?: string;
+  };
   createdAt: number;
   updatedAt: number;
 }
@@ -116,7 +127,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [isSandbox, setIsSandbox] = useState(true);
   const [providerName, setProviderName] = useState('sandbox');
-  const [selectedAsset, setSelectedAsset] = useState('USDT-TRC20');
+  const [selectedAsset, setSelectedAsset] = useState('USDT-BEP20');
 
   // Deposit state
   const [depositDollars, setDepositDollars] = useState('100');
@@ -160,6 +171,36 @@ export const CashierModal: React.FC<CashierModalProps> = ({
       .catch(() => {});
     loadHistory();
   }, [isOpen, user?.id]);
+
+  // Poll live USDTautopay deposit status automatically every 5s while pending
+  const syncLiveDeposit = async (txId: string) => {
+    try {
+      const res = await fetch(`/api/payments/deposit/${encodeURIComponent(txId)}/status`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.transaction) {
+        setActiveDeposit(data.transaction);
+        if (data.transaction.status === 'COMPLETED' && data.user) {
+          onUserUpdated(data.user);
+          loadHistory();
+          onToast(
+            `DEPOSIT CONFIRMED +${formatUsd(data.transaction.netCents)}`,
+            `USDT (BEP-20) confirmed on BSC Mainnet!`,
+            'emerald'
+          );
+        }
+      }
+    } catch {
+      // ignore poll error
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen || !activeDeposit) return;
+    if (activeDeposit.provider !== 'usdtautopay' || activeDeposit.status === 'COMPLETED') return;
+    const id = setInterval(() => syncLiveDeposit(activeDeposit.id), 5000);
+    return () => clearInterval(id);
+  }, [isOpen, activeDeposit?.id, activeDeposit?.status, activeDeposit?.provider]);
 
   // Poll briefly while any withdrawal is PROCESSING so UI shows COMPLETED automatically
   useEffect(() => {
@@ -289,8 +330,14 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                 <h2 className="font-display text-base font-bold text-white">
                   Cashier Gateway
                 </h2>
-                <span className="rounded-full bg-[#F5B731]/15 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-[#F5B731]">
-                  {isSandbox ? 'Sandbox Ready' : providerName}
+                <span
+                  className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${
+                    isSandbox
+                      ? 'bg-[#F5B731]/15 text-[#F5B731]'
+                      : 'bg-[#00E599]/15 text-[#00E599]'
+                  }`}
+                >
+                  {isSandbox ? 'Sandbox Ready' : `${providerName} LIVE`}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-400">
@@ -434,16 +481,53 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                       </div>
                     </div>
 
+                    {activeDeposit.provider === 'usdtautopay' && (
+                      <div className="rounded-xl border border-[#00E599]/25 bg-[#00E599]/[0.06] px-3 py-2 text-xs flex items-center justify-between">
+                        <span className="text-zinc-300 font-medium">
+                          BSC Mainnet Confirmations
+                        </span>
+                        <span className="font-mono font-bold text-[#00E599]">
+                          {activeDeposit.metadata?.confirmations ?? 0} /{' '}
+                          {activeDeposit.metadata?.requiredConfirmations ?? 15}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/[0.06]">
-                      <button
-                        disabled={busy}
-                        onClick={confirmSandboxDeposit}
-                        className="flex-1 rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3 font-display text-xs font-black text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.35)] transition hover:brightness-110 disabled:opacity-50"
-                      >
-                        {busy
-                          ? 'Confirming...'
-                          : `Confirm Payment ${formatUsd(activeDeposit.amountCents)} (Sandbox Webhook)`}
-                      </button>
+                      {activeDeposit.provider === 'usdtautopay' ? (
+                        <>
+                          {activeDeposit.metadata?.checkoutUrl && (
+                            <a
+                              href={activeDeposit.metadata.checkoutUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3 font-display text-xs font-black text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.35)] transition hover:brightness-110"
+                            >
+                              Open USDTautopay Checkout
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => syncLiveDeposit(activeDeposit.id)}
+                            className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 px-4 py-3 text-xs font-bold text-white hover:bg-white/[0.06]"
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Sync Status
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          disabled={busy}
+                          onClick={confirmSandboxDeposit}
+                          className="flex-1 rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3 font-display text-xs font-black text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.35)] transition hover:brightness-110 disabled:opacity-50"
+                        >
+                          {busy
+                            ? 'Confirming...'
+                            : `Confirm Payment ${formatUsd(activeDeposit.amountCents)} (Sandbox Webhook)`}
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => setActiveDeposit(null)}
@@ -477,9 +561,15 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                         >
                           <div className="flex items-center justify-between">
                             {railIcon(m.rail)}
-                            <span className="font-mono text-[9px] text-zinc-500">
-                              {m.eta}
-                            </span>
+                            {m.liveGateway && !isSandbox ? (
+                              <span className="rounded bg-[#00E599]/20 px-1.5 py-0.2 font-mono text-[9px] font-black text-[#00E599]">
+                                LIVE
+                              </span>
+                            ) : (
+                              <span className="font-mono text-[9px] text-zinc-500">
+                                {m.eta}
+                              </span>
+                            )}
                           </div>
                           <div className="mt-1.5 text-xs font-bold text-white truncate">
                             {m.label}

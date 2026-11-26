@@ -1,6 +1,24 @@
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
+
+// Load local .env automatically (without external dependencies)
+const envPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(envPath)) {
+  const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    const val = trimmed.slice(eq + 1).trim();
+    if (key && process.env[key] === undefined) {
+      process.env[key] = val;
+    }
+  }
+}
+
 const express = require('express');
 const cors = require('cors');
 const { Server } = require('socket.io');
@@ -31,7 +49,13 @@ const PORT = Number(process.env.PORT || 4000);
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf.toString('utf8');
+    },
+  })
+);
 
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
@@ -588,6 +612,15 @@ app.post('/api/payments/deposit', async (req, res) => {
   }
 });
 
+app.get('/api/payments/deposit/:transactionId/status', async (req, res) => {
+  try {
+    const result = await paymentGateway.syncDepositStatus(req.params.transactionId);
+    return res.json(result);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
 app.post('/api/payments/deposit/confirm', (req, res) => {
   try {
     const { transactionId, externalTxHash } = req.body || {};
@@ -596,7 +629,8 @@ app.post('/api/payments/deposit/confirm', (req, res) => {
       transactionId,
       externalTxHash,
       signature,
-      rawBody: req.body,
+      rawBody: req.rawBody || JSON.stringify(req.body || {}),
+      fromWebhook: false,
     });
     return res.json(result);
   } catch (err) {
@@ -604,30 +638,46 @@ app.post('/api/payments/deposit/confirm', (req, res) => {
   }
 });
 
-// Standard webhook endpoint for live external payment gateways (Stripe / Razorpay / NOWPayments / Custom)
+// Live USDTautopay Webhook Endpoint (verifies X-Gateway-Signature: t=...,v1=...)
 app.post('/api/payments/webhook', (req, res) => {
   try {
-    const { event, transactionId, txHash, status } = req.body || {};
     const signature = req.headers['x-gateway-signature'];
-    if (event === 'deposit.completed' || status === 'COMPLETED') {
+    const headerEvent = req.headers['x-gateway-event'];
+    const rawBody = req.rawBody || JSON.stringify(req.body || {});
+
+    if (!paymentGateway.verifyWebhookSignature(rawBody, signature)) {
+      return res.status(401).json({ error: 'Invalid X-Gateway-Signature' });
+    }
+
+    const body = req.body || {};
+    const event = String(headerEvent || body.event || '');
+    const data = body.data || body;
+    const externalOrderId = data.externalOrderId || data.transactionId;
+    const externalPayoutId = data.externalPayoutId || data.transactionId;
+
+    if (event === 'deposit.confirmed' || event === 'deposit.completed') {
       const result = paymentGateway.confirmDeposit({
-        transactionId,
-        externalTxHash: txHash,
+        transactionId: externalOrderId,
+        externalTxHash: data.txHash || data.sessionId,
         signature,
-        rawBody: req.body,
+        rawBody,
+        fromWebhook: true,
       });
       return res.json({ received: true, status: result.transaction.status });
     }
-    if (event === 'withdrawal.failed' || event === 'withdrawal.completed') {
-      if (!paymentGateway.verifyWebhookSignature(req.body, signature)) {
-        return res.status(401).json({ error: 'Invalid webhook signature' });
-      }
-      const nextStatus = event === 'withdrawal.completed' ? 'COMPLETED' : 'FAILED';
-      const updated = db.updateWithdrawalStatus(transactionId, nextStatus, txHash);
+
+    if (event === 'payout.completed' || event === 'payout.rejected' || event === 'withdrawal.failed') {
+      const nextStatus = event === 'payout.completed' ? 'COMPLETED' : 'FAILED';
+      const updated = db.updateWithdrawalStatus(
+        externalPayoutId,
+        nextStatus,
+        data.txHash || data.payoutId
+      );
       notifyUserSockets(updated.user);
       return res.json({ received: true, status: updated.transaction.status });
     }
-    return res.json({ received: true });
+
+    return res.json({ received: true, event });
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
