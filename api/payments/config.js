@@ -1,4 +1,4 @@
-const { PAYMENT_METHODS, getEnv } = require('./_lib/gateway');
+const { PAYMENT_METHODS, getEnv } = require('../_lib/gateway');
 
 module.exports = function handler(_req, res) {
   const env = getEnv();
