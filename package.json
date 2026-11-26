@@ -1,0 +1,18 @@
+{
+  "name": "pulsepredict-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Real-time Crypto & Commodities Market Prediction Arena with Equal-Split Prize Pools and 10% Master Wallet Treasury",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev": "npx concurrently -n API,WEB -c cyan,emerald \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "test": "npm --prefix server test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
