@@ -1627,8 +1627,75 @@ export function getStandaloneRuntime(): StandaloneRuntime {
   if (!singleton) {
     singleton = new StandaloneRuntime();
     const origFetch = window.fetch.bind(window);
-    window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+      // Let LIVE payment gateway routes hit real Vercel Serverless Functions (/api/payments/*)
+      // while keeping local user wallet & history synced cleanly!
+      if (url.startsWith('/api/payments/')) {
+        if (url === '/api/payments/deposit/confirm') {
+          return singleton!.handleApi(url, init);
+        }
+        try {
+          const res = await origFetch(input, init);
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const clone = res.clone();
+            const data = await clone.json().catch(() => null);
+            if (res.ok && data) {
+              if (url === '/api/payments/deposit' && data.transaction) {
+                singleton!.payments.unshift(data.transaction);
+              } else if (url.startsWith('/api/payments/deposit/') && data.transaction) {
+                const existing = singleton!.payments.find((p) => p.id === data.transaction.id);
+                if (existing) {
+                  const wasPending = existing.status !== 'COMPLETED';
+                  Object.assign(existing, data.transaction);
+                  if (wasPending && data.transaction.status === 'COMPLETED') {
+                    const u = singleton!.users.get(existing.userId);
+                    if (u) {
+                      u.balanceCents += existing.netCents;
+                      singleton!._saveUser(u);
+                      singleton!.emit('user:updated', { ...u });
+                      return new Response(
+                        JSON.stringify({ transaction: existing, user: { ...u } }),
+                        { status: 200, headers: { 'Content-Type': 'application/json' } }
+                      );
+                    }
+                  }
+                }
+              } else if (url === '/api/payments/withdraw' && data.transaction) {
+                const body = init?.body ? JSON.parse(String(init.body)) : {};
+                const u = singleton!.users.get(body.userId);
+                if (u) {
+                  u.balanceCents = Math.max(0, u.balanceCents - data.transaction.amountCents);
+                  singleton!._saveUser(u);
+                  singleton!.payments.unshift(data.transaction);
+                  singleton!.emit('user:updated', { ...u });
+                  return new Response(
+                    JSON.stringify({ ...data, user: { ...u } }),
+                    { status: 200, headers: { 'Content-Type': 'application/json' } }
+                  );
+                }
+              } else if (url.startsWith('/api/payments/history/')) {
+                const remoteTx = Array.isArray(data.transactions) ? data.transactions : [];
+                const merged = [...singleton!.payments];
+                for (const r of remoteTx) {
+                  if (!merged.some((m) => m.id === r.id)) merged.push(r);
+                }
+                return new Response(JSON.stringify({ transactions: merged }), {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/json' },
+                });
+              }
+            }
+            return res;
+          }
+        } catch {
+          // Fall through to local handler if offline
+        }
+        return singleton!.handleApi(url, init);
+      }
+
       if (url.startsWith('/api/')) {
         return singleton!.handleApi(url, init);
       }

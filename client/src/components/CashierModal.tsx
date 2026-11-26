@@ -50,6 +50,7 @@ export interface PaymentTransaction {
   providerRef: string;
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   metadata?: {
+    sessionId?: string;
     network?: string;
     eta?: string;
     checkoutUrl?: string | null;
@@ -173,9 +174,10 @@ export const CashierModal: React.FC<CashierModalProps> = ({
   }, [isOpen, user?.id]);
 
   // Poll live USDTautopay deposit status automatically every 5s while pending
-  const syncLiveDeposit = async (txId: string) => {
+  const syncLiveDeposit = async (txId: string, sessionId?: string) => {
     try {
-      const res = await fetch(`/api/payments/deposit/${encodeURIComponent(txId)}/status`);
+      const qs = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
+      const res = await fetch(`/api/payments/deposit/${encodeURIComponent(txId)}/status${qs}`);
       if (!res.ok) return;
       const data = await res.json();
       if (data.transaction) {
@@ -198,7 +200,10 @@ export const CashierModal: React.FC<CashierModalProps> = ({
   useEffect(() => {
     if (!isOpen || !activeDeposit) return;
     if (activeDeposit.provider !== 'usdtautopay' || activeDeposit.status === 'COMPLETED') return;
-    const id = setInterval(() => syncLiveDeposit(activeDeposit.id), 5000);
+    const id = setInterval(
+      () => syncLiveDeposit(activeDeposit.id, activeDeposit.metadata?.sessionId || activeDeposit.providerRef),
+      5000
+    );
     return () => clearInterval(id);
   }, [isOpen, activeDeposit?.id, activeDeposit?.status, activeDeposit?.provider]);
 
@@ -510,7 +515,12 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                           <button
                             type="button"
                             disabled={busy}
-                            onClick={() => syncLiveDeposit(activeDeposit.id)}
+                            onClick={() =>
+                              syncLiveDeposit(
+                                activeDeposit.id,
+                                activeDeposit.metadata?.sessionId || activeDeposit.providerRef
+                              )
+                            }
                             className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 px-4 py-3 text-xs font-bold text-white hover:bg-white/[0.06]"
                           >
                             <RefreshCw className="h-3.5 w-3.5" />
