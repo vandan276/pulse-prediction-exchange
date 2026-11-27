@@ -183,6 +183,19 @@ function createDatabase(dbFilePath) {
     CREATE INDEX IF NOT EXISTS idx_payments_ref ON payment_transactions(provider_ref);
   `);
 
+  // Safe schema migration for real email/password authentication
+  const userCols = db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
+  if (!userCols.includes('email')) {
+    db.exec('ALTER TABLE users ADD COLUMN email TEXT');
+  }
+  if (!userCols.includes('password_hash')) {
+    db.exec('ALTER TABLE users ADD COLUMN password_hash TEXT');
+  }
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique
+      ON users(lower(email)) WHERE email IS NOT NULL;
+  `);
+
   function runTransaction(fn) {
     db.exec('BEGIN IMMEDIATE');
     try {
@@ -211,6 +224,7 @@ function createDatabase(dbFilePath) {
     return {
       id: row.id,
       username: row.username,
+      email: row.email || undefined,
       avatarColor: row.avatar_color,
       balanceCents: Number(row.balance_cents),
       isBot: Boolean(row.is_bot),
@@ -293,6 +307,63 @@ function createDatabase(dbFilePath) {
   function getUserById(userId) {
     const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
     return formatUser(row);
+  }
+
+  function registerUser({ username, email, passwordHash }) {
+    const cleanUsername = sanitizeUsername(username);
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (cleanUsername.length < 3) {
+      throw new Error('Username must be at least 3 alphanumeric characters');
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      throw new Error('Please enter a valid email address');
+    }
+
+    const existingEmail = db
+      .prepare('SELECT id FROM users WHERE lower(email) = lower(?)')
+      .get(cleanEmail);
+    if (existingEmail) {
+      throw new Error('An account with this email already exists. Please sign in.');
+    }
+
+    const existingUsername = db
+      .prepare('SELECT id, is_bot FROM users WHERE lower(username) = lower(?)')
+      .get(cleanUsername);
+    if (existingUsername) {
+      throw new Error(
+        existingUsername.is_bot
+          ? 'That username is reserved. Please pick another handle.'
+          : 'That username is already taken. Please pick another handle.'
+      );
+    }
+
+    const id = `usr_${crypto.randomBytes(6).toString('hex')}`;
+    const avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+    const now = Date.now();
+
+    runTransaction(() => {
+      db.prepare(`
+        INSERT INTO users (id, username, email, password_hash, avatar_color, balance_cents, is_bot, created_at)
+        VALUES (?, ?, ?, ?, ?, 0, 0, ?)
+      `).run(id, cleanUsername, cleanEmail, passwordHash, avatarColor, now);
+    });
+
+    return getUserById(id);
+  }
+
+  function findAuthUser(identifier) {
+    const clean = String(identifier || '').trim().toLowerCase();
+    if (!clean) return null;
+    const row = db
+      .prepare(
+        'SELECT * FROM users WHERE is_bot = 0 AND (lower(email) = ? OR lower(username) = ?) LIMIT 1'
+      )
+      .get(clean, clean);
+    if (!row) return null;
+    return {
+      user: formatUser(row),
+      passwordHash: row.password_hash || null,
+    };
   }
 
   function topUpUser(userId, amountCents) {
@@ -1347,6 +1418,8 @@ function createDatabase(dbFilePath) {
     db,
     ensureBots,
     getOrCreateUser,
+    registerUser,
+    findAuthUser,
     getUserById,
     topUpUser,
     debitStakeAndCreateBet,

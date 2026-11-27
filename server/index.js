@@ -38,6 +38,16 @@ const { CrashEngine } = require('./services/crashEngine');
 const { OriginalsEngine } = require('./services/originalsEngine');
 const { PaymentGatewayService } = require('./services/paymentGateway');
 const {
+  hashPassword,
+  verifyPassword,
+  signSessionToken,
+  verifySessionToken,
+  extractTokenFromReq,
+  buildSessionCookie,
+  buildClearCookie,
+  validateSignupInput,
+} = require('../api/_lib/auth');
+const {
   PUMP_CONFIGS,
   PLINKO_MULTIPLIERS,
   TOWER_CONFIGS,
@@ -255,6 +265,67 @@ app.get('/api/room', (req, res) => {
     return res.status(404).json({ error: 'Prediction room not found' });
   }
   return res.json(snapshot);
+});
+
+app.post('/api/auth/signup', (req, res) => {
+  try {
+    const { username, email, password } = validateSignupInput(req.body || {});
+    const passwordHash = hashPassword(password);
+    const user = db.registerUser({ username, email, passwordHash });
+    const token = signSessionToken({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      avatarColor: user.avatarColor,
+    });
+    res.setHeader('Set-Cookie', buildSessionCookie(token));
+    return res.status(201).json({ user, token });
+  } catch (err) {
+    const status = /already exists|already taken|reserved/i.test(err.message) ? 409 : 400;
+    return res.status(status).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { identifier, email, username, password } = req.body || {};
+    const lookup = String(identifier || email || username || '').trim();
+    if (!lookup || !password) {
+      return res.status(400).json({ error: 'Please enter your email/username and password.' });
+    }
+    const found = db.findAuthUser(lookup);
+    if (!found || !found.passwordHash || !verifyPassword(password, found.passwordHash)) {
+      return res.status(401).json({ error: 'Invalid email/username or password.' });
+    }
+    const token = signSessionToken({
+      id: found.user.id,
+      username: found.user.username,
+      email: found.user.email,
+      avatarColor: found.user.avatarColor,
+    });
+    res.setHeader('Set-Cookie', buildSessionCookie(token));
+    return res.json({ user: found.user, token });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const token = extractTokenFromReq(req);
+  const payload = verifySessionToken(token);
+  if (!payload || !payload.id) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  const user = db.getUserById(payload.id);
+  if (!user) {
+    return res.status(401).json({ error: 'Session user not found' });
+  }
+  return res.json({ user });
+});
+
+app.post('/api/auth/logout', (_req, res) => {
+  res.setHeader('Set-Cookie', buildClearCookie());
+  return res.json({ ok: true });
 });
 
 app.post('/api/users/login', (req, res) => {

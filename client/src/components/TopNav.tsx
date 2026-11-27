@@ -3,11 +3,12 @@ import {
   Bot,
   Gamepad2,
   Landmark,
+  LogIn,
   Moon,
   Plus,
   Sun,
   Trophy,
-  User,
+  UserPlus,
   Users,
   Wallet,
 } from 'lucide-react';
@@ -21,7 +22,7 @@ interface TopNavProps {
   globalStats: GlobalStats | null;
   masterWallet: MasterWalletSummary | null;
   user: UserProfile | null;
-  onOpenUserModal: () => void;
+  onOpenAuthModal: (mode: 'login' | 'signup') => void;
   onOpenCashier: (tab: 'deposit' | 'withdraw') => void;
   onTopUp: () => void;
   onToggleBots: () => void;
@@ -37,7 +38,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   globalStats,
   masterWallet,
   user,
-  onOpenUserModal,
+  onOpenAuthModal,
   onOpenCashier,
   onToggleBots,
   theme,
@@ -222,7 +223,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 Withdraw
               </button>
               <button
-                onClick={onOpenUserModal}
+                onClick={() => onOpenAuthModal('login')}
                 className="flex h-6 items-center gap-1.5 rounded-full bg-white/[0.06] pl-1.5 pr-2.5 text-[11px] font-semibold text-zinc-200 transition hover:bg-white/[0.12]"
               >
                 <span
@@ -233,13 +234,22 @@ export const TopNav: React.FC<TopNavProps> = ({
               </button>
             </div>
           ) : (
-            <button
-              onClick={onOpenUserModal}
-              className="flex items-center gap-1.5 rounded-full bg-[#00E599] px-4 py-1.5 text-xs font-bold text-[#040507] shadow-[0_0_20px_rgba(0,229,153,0.3)] transition hover:brightness-110"
-            >
-              <User className="h-3.5 w-3.5" />
-              Connect
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => onOpenAuthModal('login')}
+                className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-white/[0.1]"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                Sign In
+              </button>
+              <button
+                onClick={() => onOpenAuthModal('signup')}
+                className="flex items-center gap-1.5 rounded-full bg-[#00E599] px-4 py-1.5 text-xs font-extrabold text-[#040507] shadow-[0_0_20px_rgba(0,229,153,0.3)] transition hover:brightness-110"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                Sign Up
+              </button>
+            </div>
           )}
         </div>
       </div>

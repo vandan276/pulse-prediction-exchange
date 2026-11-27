@@ -1,11 +1,13 @@
 -- PULSE Exchange — Supabase Postgres Schema
--- Run in Supabase SQL Editor once a free/Pro project slot is available.
+-- Run in Supabase SQL Editor once a project slot is available.
 
 CREATE TABLE IF NOT EXISTS public.pulse_users (
   id TEXT PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
-  avatar_color TEXT NOT NULL DEFAULT '#00E599',
-  balance_cents BIGINT NOT NULL DEFAULT 100000,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  avatar_color TEXT NOT NULL DEFAULT '#059669',
+  balance_cents BIGINT NOT NULL DEFAULT 0,
   total_bets INTEGER NOT NULL DEFAULT 0,
   total_wins INTEGER NOT NULL DEFAULT 0,
   total_wagered_cents BIGINT NOT NULL DEFAULT 0,

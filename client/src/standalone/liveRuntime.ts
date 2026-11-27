@@ -443,9 +443,106 @@ class StandaloneRuntime {
     });
   }
 
+  _applyLiveBinanceTick(
+    m: (typeof MARKETS_DEF)[number],
+    price: number,
+    open24h: number,
+    high24h: number,
+    low24h: number,
+    changePercent: number
+  ) {
+    if (!Number.isFinite(price) || price <= 0) return;
+    const prev = this.tickers.get(m.symbol);
+    if (!prev) return;
+    const isFirstLive = prev.source !== 'binance_live';
+    if (isFirstLive) {
+      const cList = this.candles.get(m.symbol) || [];
+      const ratio = price / (cList[cList.length - 1]?.close || price);
+      cList.forEach((c) => {
+        c.open = roundPrice(c.open * ratio, m.decimals);
+        c.high = roundPrice(c.high * ratio, m.decimals);
+        c.low = roundPrice(c.low * ratio, m.decimals);
+        c.close = roundPrice(c.close * ratio, m.decimals);
+      });
+      const h = this.history.get(m.symbol) || [];
+      h.forEach((pt) => {
+        pt.price = roundPrice(pt.price * ratio, m.decimals);
+      });
+      // Re-anchor live lockPrice on first live Binance tick so chart strike matches live price
+      for (const room of this.rooms.values()) {
+        if (room.symbol === m.symbol) room.liveRound.lockPrice = price;
+      }
+    }
+    this.tickers.set(m.symbol, {
+      ...prev,
+      prevPrice: isFirstLive ? price : prev.price,
+      price,
+      open24h: Number.isFinite(open24h) && open24h > 0 ? roundPrice(open24h, m.decimals) : prev.open24h,
+      high24h: Number.isFinite(high24h) && high24h > 0 ? roundPrice(high24h, m.decimals) : prev.high24h,
+      low24h: Number.isFinite(low24h) && low24h > 0 ? roundPrice(low24h, m.decimals) : prev.low24h,
+      changePercent: Number.isFinite(changePercent) ? Number(changePercent.toFixed(2)) : prev.changePercent,
+      source: 'binance_live',
+      sparkline: (this.candles.get(m.symbol) || []).slice(-20).map((c) => c.close),
+      updatedAt: Date.now(),
+    });
+    this.lastBinance.set(m.symbol, Date.now());
+
+    if (isFirstLive) {
+      const [wSym, wTf, wTier] = this.watchedRoom.split('|');
+      if (wSym === m.symbol) {
+        this.emit('market:history', {
+          symbol: m.symbol,
+          points: (this.history.get(m.symbol) || []).map((p) => ({ ...p })),
+          candles: (this.candles.get(m.symbol) || []).map((c) => ({ ...c })),
+        });
+        const snap = this.getRoomSnapshot(wSym, wTf, Number(wTier));
+        if (snap) this.emit('room:state', snap);
+      }
+      this.emit('market:ticks', {
+        serverTime: Date.now(),
+        tickers: Array.from(this.tickers.values()),
+      });
+    }
+  }
+
   _connectBinanceBrowser() {
+    // 1. Immediate REST snapshot so live Binance prices anchor right on page load (no $95k -> $62k cliff)
     try {
-      const streams = MARKETS_DEF.filter((m) => m.binanceSymbol).map((m) => `${m.binanceSymbol}@ticker`).join('/');
+      const syms = MARKETS_DEF.filter((m) => m.binanceSymbol).map((m) =>
+        m.binanceSymbol!.toUpperCase()
+      );
+      const restUrl = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(
+        JSON.stringify(syms)
+      )}`;
+      fetch(restUrl)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((list) => {
+          if (!Array.isArray(list)) return;
+          for (const d of list) {
+            const m = MARKETS_DEF.find((x) => x.binanceSymbol?.toUpperCase() === d.symbol);
+            if (!m) continue;
+            this._applyLiveBinanceTick(
+              m,
+              roundPrice(parseFloat(d.lastPrice), m.decimals),
+              parseFloat(d.openPrice),
+              parseFloat(d.highPrice),
+              parseFloat(d.lowPrice),
+              parseFloat(d.priceChangePercent)
+            );
+          }
+        })
+        .catch(() => {
+          // WebSocket will still sync
+        });
+    } catch {
+      // ignore
+    }
+
+    // 2. Real-time WebSocket stream
+    try {
+      const streams = MARKETS_DEF.filter((m) => m.binanceSymbol)
+        .map((m) => `${m.binanceSymbol}@ticker`)
+        .join('/');
       const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
       ws.onmessage = (ev) => {
         try {
@@ -454,37 +551,14 @@ class StandaloneRuntime {
           if (!d?.s) return;
           const m = MARKETS_DEF.find((x) => x.binanceSymbol?.toUpperCase() === d.s);
           if (!m) return;
-          const price = roundPrice(parseFloat(d.c), m.decimals);
-          if (!Number.isFinite(price) || price <= 0) return;
-          const prev = this.tickers.get(m.symbol)!;
-          if (prev.source !== 'binance_live') {
-            const cList = this.candles.get(m.symbol) || [];
-            const ratio = price / (cList[cList.length - 1]?.close || price);
-            cList.forEach((c) => {
-              c.open = roundPrice(c.open * ratio, m.decimals);
-              c.high = roundPrice(c.high * ratio, m.decimals);
-              c.low = roundPrice(c.low * ratio, m.decimals);
-              c.close = roundPrice(c.close * ratio, m.decimals);
-            });
-            const h = this.history.get(m.symbol) || [];
-            h.forEach((pt) => { pt.price = roundPrice(pt.price * ratio, m.decimals); });
-            // Re-anchor live lockPrice on first live Binance tick so chart strike matches live price
-            for (const room of this.rooms.values()) {
-              if (room.symbol === m.symbol) room.liveRound.lockPrice = price;
-            }
-          }
-          this.tickers.set(m.symbol, {
-            ...prev,
-            prevPrice: prev.price,
-            price,
-            open24h: roundPrice(parseFloat(d.o) || prev.open24h, m.decimals),
-            high24h: roundPrice(parseFloat(d.h) || prev.high24h, m.decimals),
-            low24h: roundPrice(parseFloat(d.l) || prev.low24h, m.decimals),
-            changePercent: Number(parseFloat(d.P || '0').toFixed(2)),
-            source: 'binance_live',
-            updatedAt: Date.now(),
-          });
-          this.lastBinance.set(m.symbol, Date.now());
+          this._applyLiveBinanceTick(
+            m,
+            roundPrice(parseFloat(d.c), m.decimals),
+            parseFloat(d.o),
+            parseFloat(d.h),
+            parseFloat(d.l),
+            parseFloat(d.P || '0')
+          );
         } catch {
           // ignore
         }
@@ -1616,6 +1690,65 @@ class StandaloneRuntime {
   }
 }
 
+async function sha256Hex(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text);
+  const hashBuf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+interface LocalAuthAccount {
+  id: string;
+  username: string;
+  email: string;
+  salt: string;
+  passHash: string;
+  avatarColor: string;
+  createdAt: number;
+}
+
+const LOCAL_ACCOUNTS_KEY = 'pulse_accounts_v1';
+const LOCAL_SESSION_KEY = 'pulse_local_session_v1';
+
+function loadLocalAccounts(): LocalAuthAccount[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalAccounts(list: LocalAuthAccount[]) {
+  try {
+    localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(list));
+  } catch {
+    // ignore quota errors
+  }
+}
+
+function hydrateStandaloneUser(rt: StandaloneRuntime, base: UserProfile): UserProfile {
+  try {
+    const saved = localStorage.getItem(`pulse_user_${base.id}`);
+    if (saved) {
+      const parsed = JSON.parse(saved) as UserProfile;
+      const merged: UserProfile = {
+        ...base,
+        ...parsed,
+        email: base.email || parsed.email,
+      };
+      rt.users.set(merged.id, merged);
+      return merged;
+    }
+  } catch {
+    // ignore
+  }
+  rt.users.set(base.id, base);
+  rt._saveUser(base);
+  return base;
+}
+
 let singleton: StandaloneRuntime | null = null;
 
 export function isStandaloneMode(): boolean {
@@ -1629,6 +1762,210 @@ export function getStandaloneRuntime(): StandaloneRuntime {
     const origFetch = window.fetch.bind(window);
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+      // Route REAL Authentication (/api/auth/*) through Vercel Serverless Functions,
+      // with salted SHA-256 local credential mirror so Sign Up -> Refresh -> Sign Out -> Sign In
+      // survives Vercel serverless cold starts seamlessly!
+      if (url.startsWith('/api/auth/')) {
+        const jsonResp = (data: unknown, status = 200) =>
+          new Response(JSON.stringify(data), {
+            status,
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+        if (url === '/api/auth/signup') {
+          const body = init?.body ? JSON.parse(String(init.body)) : {};
+          const cleanEmail = String(body.email || '').trim().toLowerCase();
+          const cleanUser = String(body.username || '')
+            .trim()
+            .replace(/[^a-zA-Z0-9_-]/g, '')
+            .slice(0, 20);
+          const cleanPass = String(body.password || '');
+
+          const accounts = loadLocalAccounts();
+          if (accounts.some((a) => a.email === cleanEmail)) {
+            return jsonResp(
+              { error: 'An account with this email already exists. Please sign in.' },
+              409
+            );
+          }
+          if (accounts.some((a) => a.username.toLowerCase() === cleanUser.toLowerCase())) {
+            return jsonResp(
+              { error: 'That username is already taken. Please pick another handle.' },
+              409
+            );
+          }
+
+          let remoteUser: UserProfile | null = null;
+          let remoteToken: string | undefined;
+          try {
+            const res = await origFetch(input, init);
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+              return jsonResp(data || { error: 'Unable to create account' }, res.status);
+            }
+            if (data?.user) {
+              remoteUser = data.user;
+              remoteToken = data.token;
+            }
+          } catch {
+            // offline fallback below
+          }
+
+          if (!remoteUser) {
+            if (cleanUser.length < 3) {
+              return jsonResp({ error: 'Username must be at least 3 alphanumeric characters.' }, 400);
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+              return jsonResp({ error: 'Please enter a valid email address.' }, 400);
+            }
+            if (cleanPass.length < 6) {
+              return jsonResp({ error: 'Password must be at least 6 characters long.' }, 400);
+            }
+            const colors = ['#00E599', '#38BDF8', '#F5B731', '#EC4899', '#A855F7', '#F97316'];
+            remoteUser = {
+              id: `usr_${randHex(6)}`,
+              username: cleanUser,
+              email: cleanEmail,
+              avatarColor: colors[Math.floor(Math.random() * colors.length)],
+              balanceCents: 0,
+              isBot: false,
+              totalBets: 0,
+              totalWins: 0,
+              totalWageredCents: 0,
+              totalWonCents: 0,
+              netProfitCents: 0,
+              winRate: 0,
+              createdAt: Date.now(),
+            };
+            remoteToken = `local_${remoteUser.id}_${randHex(12)}`;
+          }
+
+          const salt = randHex(8);
+          const passHash = await sha256Hex(`${salt}:${cleanPass}`);
+          accounts.push({
+            id: remoteUser.id,
+            username: remoteUser.username,
+            email: remoteUser.email || cleanEmail,
+            salt,
+            passHash,
+            avatarColor: remoteUser.avatarColor,
+            createdAt: remoteUser.createdAt,
+          });
+          saveLocalAccounts(accounts);
+          const user = hydrateStandaloneUser(singleton!, remoteUser);
+          localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ userId: user.id, token: remoteToken }));
+          return jsonResp({ user, token: remoteToken }, 201);
+        }
+
+        if (url === '/api/auth/login') {
+          const body = init?.body ? JSON.parse(String(init.body)) : {};
+          const lookup = String(body.identifier || body.email || body.username || '')
+            .trim()
+            .toLowerCase();
+          const pass = String(body.password || '');
+          if (!lookup || !pass) {
+            return jsonResp({ error: 'Please enter your email/username and password.' }, 400);
+          }
+
+          try {
+            const res = await origFetch(input, init);
+            const data = await res.json().catch(() => null);
+            if (res.ok && data?.user) {
+              const user = hydrateStandaloneUser(singleton!, data.user);
+              localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ userId: user.id, token: data.token }));
+              return jsonResp({ user, token: data.token }, 200);
+            }
+          } catch {
+            // fallback to local verified accounts
+          }
+
+          // Verify against local salted SHA-256 mirror (survives Vercel cold starts)
+          const accounts = loadLocalAccounts();
+          const acc = accounts.find(
+            (a) => a.email === lookup || a.username.toLowerCase() === lookup
+          );
+          if (!acc) {
+            return jsonResp({ error: 'Invalid email/username or password.' }, 401);
+          }
+          const checkHash = await sha256Hex(`${acc.salt}:${pass}`);
+          if (checkHash !== acc.passHash) {
+            return jsonResp({ error: 'Invalid email/username or password.' }, 401);
+          }
+
+          const baseUser: UserProfile = {
+            id: acc.id,
+            username: acc.username,
+            email: acc.email,
+            avatarColor: acc.avatarColor,
+            balanceCents: 0,
+            isBot: false,
+            totalBets: 0,
+            totalWins: 0,
+            totalWageredCents: 0,
+            totalWonCents: 0,
+            netProfitCents: 0,
+            winRate: 0,
+            createdAt: acc.createdAt,
+          };
+          const user = hydrateStandaloneUser(singleton!, baseUser);
+          const token = `local_${user.id}_${randHex(12)}`;
+          localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ userId: user.id, token }));
+          return jsonResp({ user, token }, 200);
+        }
+
+        if (url === '/api/auth/me') {
+          try {
+            const res = await origFetch(input, init);
+            const data = await res.json().catch(() => null);
+            if (res.ok && data?.user) {
+              const user = hydrateStandaloneUser(singleton!, data.user);
+              return jsonResp({ user }, 200);
+            }
+          } catch {
+            // check local session mirror below
+          }
+
+          try {
+            const sessRaw = localStorage.getItem(LOCAL_SESSION_KEY);
+            if (sessRaw) {
+              const sess = JSON.parse(sessRaw);
+              const acc = loadLocalAccounts().find((a) => a.id === sess.userId);
+              if (acc) {
+                const user = hydrateStandaloneUser(singleton!, {
+                  id: acc.id,
+                  username: acc.username,
+                  email: acc.email,
+                  avatarColor: acc.avatarColor,
+                  balanceCents: 0,
+                  isBot: false,
+                  totalBets: 0,
+                  totalWins: 0,
+                  totalWageredCents: 0,
+                  totalWonCents: 0,
+                  netProfitCents: 0,
+                  winRate: 0,
+                  createdAt: acc.createdAt,
+                });
+                return jsonResp({ user }, 200);
+              }
+            }
+          } catch {
+            // ignore
+          }
+          return jsonResp({ error: 'Not authenticated' }, 401);
+        }
+
+        if (url === '/api/auth/logout') {
+          localStorage.removeItem(LOCAL_SESSION_KEY);
+          try {
+            await origFetch(input, init);
+          } catch {
+            // ignore
+          }
+          return jsonResp({ ok: true }, 200);
+        }
+      }
 
       // Let LIVE payment gateway routes hit real Vercel Serverless Functions (/api/payments/*)
       // while keeping local user wallet & history synced cleanly!

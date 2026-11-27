@@ -68,6 +68,7 @@ export interface CandlePoint {
 export interface UserProfile {
   id: string;
   username: string;
+  email?: string;
   avatarColor: string;
   balanceCents: number;
   isBot: boolean;

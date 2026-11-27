@@ -40,7 +40,7 @@ import { MasterWalletView } from './components/MasterWalletView';
 import { LeaderboardView } from './components/LeaderboardView';
 import { OriginalsHub } from './components/originals/OriginalsHub';
 import { CashierModal } from './components/CashierModal';
-import { UserModal } from './components/UserModal';
+import { AuthModal, AuthModalMode } from './components/AuthModal';
 import { ToastStack } from './components/ToastStack';
 import { getStandaloneRuntime, isStandaloneMode } from './standalone/liveRuntime';
 
@@ -103,7 +103,8 @@ export default function App() {
 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userBets, setUserBets] = useState<UserBetRecord[]>([]);
-  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<AuthModalMode>('login');
   const [cashierOpen, setCashierOpen] = useState(false);
   const [cashierTab, setCashierTab] = useState<'deposit' | 'withdraw' | 'history'>('deposit');
   const [placingBet, setPlacingBet] = useState(false);
@@ -168,32 +169,86 @@ export default function App() {
     }
   }, []);
 
-  const loginUsername = useCallback(
-    async (rawUsername: string, silent = false) => {
-      const res = await fetch('/api/users/login', {
+  const openAuthModal = useCallback((mode: AuthModalMode = 'login') => {
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
+  }, []);
+
+  const applyAuthenticatedSession = useCallback(
+    (nextUser: UserProfile, token?: string) => {
+      setUser(nextUser);
+      if (token) {
+        localStorage.setItem('pulse_auth_token', token);
+      }
+      localStorage.setItem('pulsepredict_user_id', nextUser.id);
+      localStorage.setItem('pulsepredict_username', nextUser.username);
+      socketRef.current?.emit('user:identify', { userId: nextUser.id });
+      fetchUserBets(nextUser.id);
+    },
+    [fetchUserBets]
+  );
+
+  const handleSignUp = useCallback(
+    async (payload: { username: string; email: string; password: string }) => {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: rawUsername }),
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to sign in');
+        throw new Error(data.error || 'Unable to create account');
       }
-      setUser(data.user);
-      localStorage.setItem('pulsepredict_user_id', data.user.id);
-      localStorage.setItem('pulsepredict_username', data.user.username);
-      socketRef.current?.emit('user:identify', { userId: data.user.id });
-      fetchUserBets(data.user.id);
-      if (!silent) {
-        pushToast(
-          `Connected as ${data.user.username}`,
-          `Wallet balance: ${formatUsd(data.user.balanceCents)}`,
-          'sky'
-        );
-      }
+      applyAuthenticatedSession(data.user, data.token);
+      pushToast(
+        `Welcome to PULSE, ${data.user.username}!`,
+        'Account created. Deposit USDT (BEP-20) anytime from the Cashier.',
+        'emerald'
+      );
     },
-    [fetchUserBets, pushToast]
+    [applyAuthenticatedSession, pushToast]
   );
+
+  const handleSignIn = useCallback(
+    async (payload: { identifier: string; password: string }) => {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid credentials');
+      }
+      applyAuthenticatedSession(data.user, data.token);
+      pushToast(
+        `Signed in as ${data.user.username}`,
+        `Wallet balance: ${formatUsd(data.user.balanceCents)}`,
+        'sky'
+      );
+    },
+    [applyAuthenticatedSession, pushToast]
+  );
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {
+      // ignore network errors on logout
+    }
+    localStorage.removeItem('pulse_auth_token');
+    localStorage.removeItem('pulsepredict_user_id');
+    localStorage.removeItem('pulsepredict_username');
+    setUser(null);
+    setUserBets([]);
+    socketRef.current?.emit('user:identify', { userId: null });
+    pushToast('Signed Out', 'Your session has been cleared.', 'sky');
+  }, [pushToast]);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -221,27 +276,30 @@ export default function App() {
         // retry via socket
       }
 
-      const savedId = localStorage.getItem('pulsepredict_user_id');
-      if (savedId) {
-        try {
-          const uRes = await fetch(`/api/users/${encodeURIComponent(savedId)}`);
-          if (uRes.ok && active) {
-            const uData = await uRes.json();
-            setUser(uData.user);
-            socketRef.current?.emit('user:identify', { userId: uData.user.id });
-            fetchUserBets(uData.user.id);
+      // Restore real authenticated session only — never auto-create a demo guest account
+      const savedToken = localStorage.getItem('pulse_auth_token');
+      try {
+        const headers: Record<string, string> = {};
+        if (savedToken) headers.Authorization = `Bearer ${savedToken}`;
+        const meRes = await fetch('/api/auth/me', {
+          headers,
+          credentials: 'include',
+        });
+        if (meRes.ok && active) {
+          const meData = await meRes.json();
+          if (meData.user) {
+            setUser(meData.user);
+            socketRef.current?.emit('user:identify', { userId: meData.user.id });
+            fetchUserBets(meData.user.id);
             return;
           }
-        } catch {
-          // fallback
+        } else if (meRes.status === 401) {
+          localStorage.removeItem('pulse_auth_token');
+          localStorage.removeItem('pulsepredict_user_id');
+          localStorage.removeItem('pulsepredict_username');
         }
-      }
-
-      const guestHandle = `Trader${Math.floor(1000 + Math.random() * 9000)}`;
-      try {
-        if (active) await loginUsername(guestHandle, true);
       } catch {
-        // user can sign in manually
+        // stay logged out until user signs in
       }
     })();
 
@@ -257,7 +315,7 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, [fetchUserBets, fetchLeaderboardAndRounds, loginUsername]);
+  }, [fetchUserBets, fetchLeaderboardAndRounds]);
 
   useEffect(() => {
     const handleTicks = ({
@@ -518,7 +576,7 @@ export default function App() {
 
   const handlePlaceBet = async (direction: Direction) => {
     if (!user) {
-      setUserModalOpen(true);
+      openAuthModal('login');
       return;
     }
     setPlacingBet(true);
@@ -609,8 +667,12 @@ export default function App() {
         globalStats={globalStats}
         masterWallet={masterWallet}
         user={user}
-        onOpenUserModal={() => setUserModalOpen(true)}
+        onOpenAuthModal={openAuthModal}
         onOpenCashier={(tab) => {
+          if (!user) {
+            openAuthModal('login');
+            return;
+          }
           setCashierTab(tab);
           setCashierOpen(true);
         }}
@@ -837,7 +899,7 @@ export default function App() {
                     nowMs={nowMs}
                     placing={placingBet}
                     onPlaceBet={handlePlaceBet}
-                    onOpenUserModal={() => setUserModalOpen(true)}
+                    onOpenUserModal={() => openAuthModal('login')}
                   />
 
                   <PlayersPanel
@@ -862,7 +924,7 @@ export default function App() {
           nowMs={nowMs}
           onUserUpdated={setUser}
           onToast={pushToast}
-          onOpenUserModal={() => setUserModalOpen(true)}
+          onOpenUserModal={() => openAuthModal('login')}
         />
       )}
 
@@ -878,11 +940,18 @@ export default function App() {
         />
       )}
 
-      <UserModal
-        isOpen={userModalOpen}
-        onClose={() => setUserModalOpen(false)}
+      <AuthModal
+        isOpen={authModalOpen}
+        initialMode={authModalMode}
+        onClose={() => setAuthModalOpen(false)}
         currentUser={user}
-        onLogin={loginUsername}
+        onSignIn={handleSignIn}
+        onSignUp={handleSignUp}
+        onLogout={handleLogout}
+        onOpenCashier={(tab) => {
+          setCashierTab(tab);
+          setCashierOpen(true);
+        }}
       />
 
       <CashierModal
