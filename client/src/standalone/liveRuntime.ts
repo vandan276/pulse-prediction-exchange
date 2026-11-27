@@ -1710,6 +1710,37 @@ interface LocalAuthAccount {
 
 const LOCAL_ACCOUNTS_KEY = 'pulse_accounts_v1';
 const LOCAL_SESSION_KEY = 'pulse_local_session_v1';
+const CREDITED_DEPOSITS_KEY = 'pulse_credited_deposits_v1';
+
+function getCreditedDepositKeys(): Set<string> {
+  try {
+    const raw = localStorage.getItem(CREDITED_DEPOSITS_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function isDepositAlreadyCredited(tx: any): boolean {
+  const keys = getCreditedDepositKeys();
+  const candidates = [tx?.id, tx?.metadata?.sessionId, tx?.providerRef].filter(
+    (v): v is string => typeof v === 'string' && v.length > 0
+  );
+  return candidates.some((k) => keys.has(k));
+}
+
+function markDepositCredited(tx: any) {
+  try {
+    const keys = getCreditedDepositKeys();
+    for (const v of [tx?.id, tx?.metadata?.sessionId, tx?.providerRef]) {
+      if (typeof v === 'string' && v.length > 0) keys.add(v);
+    }
+    localStorage.setItem(CREDITED_DEPOSITS_KEY, JSON.stringify(Array.from(keys).slice(-500)));
+  } catch {
+    // ignore storage errors
+  }
+}
 
 function loadLocalAccounts(): LocalAuthAccount[] {
   try {
@@ -1986,19 +2017,42 @@ export function getStandaloneRuntime(): StandaloneRuntime {
                 const existing = singleton!.payments.find((p) => p.id === data.transaction.id);
                 if (existing) {
                   const wasPending = existing.status !== 'COMPLETED';
-                  Object.assign(existing, data.transaction);
-                  if (wasPending && data.transaction.status === 'COMPLETED') {
+                  const alreadyCredited = isDepositAlreadyCredited(existing) || isDepositAlreadyCredited(data.transaction);
+                  Object.assign(existing, data.transaction, {
+                    userId: existing.userId,
+                    netCents: data.transaction.netCents || existing.netCents,
+                    amountCents: data.transaction.amountCents || existing.amountCents,
+                  });
+                  if (wasPending && !alreadyCredited && data.transaction.status === 'COMPLETED') {
+                    // Mark credited synchronously BEFORE mutating balance to guarantee strict single-credit idempotency
+                    markDepositCredited(existing);
                     const u = singleton!.users.get(existing.userId);
                     if (u) {
+                      // Re-sync latest persisted balance in case another tab updated it
+                      try {
+                        const savedRaw = localStorage.getItem(`pulse_user_${u.id}`);
+                        if (savedRaw) {
+                          const savedUser = JSON.parse(savedRaw);
+                          if (typeof savedUser.balanceCents === 'number') {
+                            u.balanceCents = savedUser.balanceCents;
+                          }
+                        }
+                      } catch {
+                        // ignore
+                      }
                       u.balanceCents += existing.netCents;
                       singleton!._saveUser(u);
                       singleton!.emit('user:updated', { ...u });
                       return new Response(
-                        JSON.stringify({ transaction: existing, user: { ...u } }),
+                        JSON.stringify({ transaction: existing, user: { ...u }, credited: true }),
                         { status: 200, headers: { 'Content-Type': 'application/json' } }
                       );
                     }
                   }
+                  return new Response(
+                    JSON.stringify({ transaction: existing, alreadyCredited: true }),
+                    { status: 200, headers: { 'Content-Type': 'application/json' } }
+                  );
                 }
               } else if (url === '/api/payments/withdraw' && data.transaction) {
                 const body = init?.body ? JSON.parse(String(init.body)) : {};

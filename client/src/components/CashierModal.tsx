@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -142,6 +142,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
   // History
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [busy, setBusy] = useState(false);
+  const syncInFlightRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) setTab(initialTab);
@@ -175,6 +176,8 @@ export const CashierModal: React.FC<CashierModalProps> = ({
 
   // Poll live USDTautopay deposit status automatically every 5s while pending
   const syncLiveDeposit = async (txId: string, sessionId?: string) => {
+    if (syncInFlightRef.current) return;
+    syncInFlightRef.current = true;
     try {
       const qs = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
       const res = await fetch(`/api/payments/deposit/${encodeURIComponent(txId)}/status${qs}`);
@@ -194,6 +197,8 @@ export const CashierModal: React.FC<CashierModalProps> = ({
       }
     } catch {
       // ignore poll error
+    } finally {
+      syncInFlightRef.current = false;
     }
   };
 
