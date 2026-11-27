@@ -47,13 +47,13 @@ export const TopNav: React.FC<TopNavProps> = ({
   const botsOn = globalStats?.botsEnabled ?? true;
 
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-white/[0.065] bg-[#040507]/85 backdrop-blur-2xl">
-      <div className="mx-auto flex h-full max-w-[1680px] items-center justify-between gap-3 px-4 lg:px-5">
+    <header className="sticky top-0 z-40 border-b border-white/[0.065] bg-[#040507]/85 backdrop-blur-2xl">
+      <div className="mx-auto flex h-14 max-w-[1680px] items-center justify-between gap-2 px-3 sm:px-4 lg:px-5">
         {/* Left: Brand Identity + Live Global Playing Telemetry */}
-        <div className="flex items-center gap-3.5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
           <button
             onClick={() => onTabChange('arena')}
-            className="flex items-center gap-2.5 group"
+            className="flex items-center gap-2 group shrink-0"
           >
             <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[#00E599] shadow-[0_0_24px_rgba(0,229,153,0.35)]">
               <svg
@@ -69,10 +69,10 @@ export const TopNav: React.FC<TopNavProps> = ({
               </svg>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-display text-base font-bold tracking-[-0.03em] text-white">
+              <span className="font-display text-sm sm:text-base font-bold tracking-[-0.03em] text-white">
                 PULSE
               </span>
-              <span className="rounded bg-white/[0.07] px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-widest text-[#00E599]">
+              <span className="hidden sm:inline rounded bg-white/[0.07] px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-widest text-[#00E599]">
                 EXCHANGE
               </span>
             </div>
@@ -81,13 +81,13 @@ export const TopNav: React.FC<TopNavProps> = ({
           <div className="hidden sm:block h-4 w-px bg-white/[0.08]" />
 
           {/* Live Global Players Playing Now */}
-          <div className="flex items-center gap-2 rounded-full border border-[#00E599]/20 bg-[#00E599]/[0.06] px-3 py-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-[#00E599]/20 bg-[#00E599]/[0.06] px-2 sm:px-3 py-1 shrink-0">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00E599] opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00E599]" />
             </span>
-            <Users className="h-3.5 w-3.5 text-[#00E599]" />
-            <span className="font-mono text-xs font-bold text-white tabular-nums">
+            <Users className="hidden sm:block h-3.5 w-3.5 text-[#00E599]" />
+            <span className="font-mono text-[11px] sm:text-xs font-bold text-white tabular-nums">
               {globalStats ? globalStats.totalPlayingNow : 0}
             </span>
             <span className="hidden md:inline text-[11px] font-medium text-zinc-400">
@@ -95,15 +95,15 @@ export const TopNav: React.FC<TopNavProps> = ({
             </span>
             <span
               title={connected ? 'WebSocket live' : 'Reconnecting...'}
-              className={`ml-0.5 h-1.5 w-1.5 rounded-full ${
+              className={`hidden sm:inline-block ml-0.5 h-1.5 w-1.5 rounded-full ${
                 connected ? 'bg-[#00E599]' : 'bg-[#FF3B69]'
               }`}
             />
           </div>
         </div>
 
-        {/* Center: Clean Segmented Navigation */}
-        <nav className="flex items-center gap-0.5 rounded-full border border-white/[0.07] bg-white/[0.025] p-1 shrink-0">
+        {/* Center: Desktop Segmented Navigation (lg+) */}
+        <nav className="hidden lg:flex items-center gap-0.5 rounded-full border border-white/[0.07] bg-white/[0.025] p-1 shrink-0">
           <button
             onClick={() => onTabChange('arena')}
             className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${
@@ -145,7 +145,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             }`}
           >
             <Landmark className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Master Vault</span>
+            <span>Master Vault</span>
             <span
               className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold tabular-nums ${
                 activeTab === 'master_wallet'
@@ -170,12 +170,12 @@ export const TopNav: React.FC<TopNavProps> = ({
             }`}
           >
             <Trophy className="h-3.5 w-3.5" />
-            <span className="hidden md:inline">Leaderboard</span>
+            <span>Leaderboard</span>
           </button>
         </nav>
 
         {/* Right: Theme Toggle + Demo Bot Toggle + Luxury Wallet Pill */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             onClick={onToggleTheme}
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
@@ -202,18 +202,18 @@ export const TopNav: React.FC<TopNavProps> = ({
           </button>
 
           {user ? (
-            <div className="flex items-center gap-1 rounded-full border border-white/[0.1] bg-[#0D1017] p-1 pl-3 shadow-inner">
-              <Wallet className="h-3.5 w-3.5 text-[#00E599] mr-1" />
-              <span className="font-mono text-xs font-bold text-white tabular-nums pr-1">
+            <div className="flex items-center gap-1 rounded-full border border-white/[0.1] bg-[#0D1017] p-1 pl-2.5 sm:pl-3 shadow-inner">
+              <Wallet className="hidden sm:block h-3.5 w-3.5 text-[#00E599] mr-0.5" />
+              <span className="font-mono text-[11px] sm:text-xs font-bold text-white tabular-nums pr-0.5 sm:pr-1">
                 {formatUsd(user.balanceCents)}
               </span>
               <button
                 onClick={() => onOpenCashier('deposit')}
                 title="Open Deposit & Withdrawal Gateway"
-                className="flex h-6 items-center gap-1 rounded-full bg-[#00E599] px-2.5 font-display text-[11px] font-extrabold text-[#040507] transition hover:brightness-110"
+                className="flex h-6 items-center gap-0.5 sm:gap-1 rounded-full bg-[#00E599] px-2 sm:px-2.5 font-display text-[10px] sm:text-[11px] font-extrabold text-[#040507] transition hover:brightness-110"
               >
                 <Plus className="h-3 w-3 stroke-[3]" />
-                Deposit
+                <span className="hidden xs:inline sm:inline">Deposit</span>
               </button>
               <button
                 onClick={() => onOpenCashier('withdraw')}
@@ -224,34 +224,92 @@ export const TopNav: React.FC<TopNavProps> = ({
               </button>
               <button
                 onClick={() => onOpenAuthModal('login')}
-                className="flex h-6 items-center gap-1.5 rounded-full bg-white/[0.06] pl-1.5 pr-2.5 text-[11px] font-semibold text-zinc-200 transition hover:bg-white/[0.12]"
+                className="flex h-6 items-center gap-1.5 rounded-full bg-white/[0.06] pl-1.5 pr-2 sm:pr-2.5 text-[11px] font-semibold text-zinc-200 transition hover:bg-white/[0.12]"
               >
                 <span
                   className="h-2.5 w-2.5 rounded-full ring-2 ring-black/40"
                   style={{ backgroundColor: user.avatarColor }}
                 />
-                <span className="max-w-[82px] truncate">{user.username}</span>
+                <span className="max-w-[58px] sm:max-w-[82px] truncate">{user.username}</span>
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => onOpenAuthModal('login')}
-                className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-white/[0.1]"
+                className="flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.05] px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold text-white transition hover:bg-white/[0.1]"
               >
                 <LogIn className="h-3.5 w-3.5" />
-                Sign In
+                <span>Sign In</span>
               </button>
               <button
                 onClick={() => onOpenAuthModal('signup')}
-                className="flex items-center gap-1.5 rounded-full bg-[#00E599] px-4 py-1.5 text-xs font-extrabold text-[#040507] shadow-[0_0_20px_rgba(0,229,153,0.3)] transition hover:brightness-110"
+                className="flex items-center gap-1 rounded-full bg-[#00E599] px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-[#040507] shadow-[0_0_20px_rgba(0,229,153,0.3)] transition hover:brightness-110"
               >
                 <UserPlus className="h-3.5 w-3.5" />
-                Sign Up
+                <span>Sign Up</span>
               </button>
             </div>
           )}
         </div>
+      </div>
+
+      {/* Mobile & Tablet Second-Row Navigation Bar (< lg) */}
+      <div className="lg:hidden border-t border-white/[0.06] px-3 py-1.5">
+        <nav className="grid grid-cols-4 gap-1 rounded-xl border border-white/[0.07] bg-white/[0.025] p-1">
+          <button
+            onClick={() => onTabChange('arena')}
+            className={`flex items-center justify-center rounded-lg py-1.5 text-[11px] font-bold transition-all ${
+              activeTab === 'arena'
+                ? 'bg-white text-[#040507] shadow-sm'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            Arena
+          </button>
+
+          <button
+            onClick={() => onTabChange('originals')}
+            className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${
+              activeTab === 'originals'
+                ? 'bg-[#00E599] text-[#040507]'
+                : 'text-zinc-400 hover:text-[#00E599]'
+            }`}
+          >
+            <Gamepad2 className="h-3.5 w-3.5 shrink-0" />
+            <span>Games</span>
+          </button>
+
+          <button
+            onClick={() => onTabChange('master_wallet')}
+            className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${
+              activeTab === 'master_wallet'
+                ? 'bg-[#F5B731] text-[#040507]'
+                : 'text-zinc-400 hover:text-[#F5B731]'
+            }`}
+          >
+            <Landmark className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate font-mono text-[10px]">
+              {formatUsd(
+                masterWallet?.combinedTreasuryCents ??
+                  masterWallet?.totalBalanceCents ??
+                  0
+              )}
+            </span>
+          </button>
+
+          <button
+            onClick={() => onTabChange('leaderboard')}
+            className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${
+              activeTab === 'leaderboard'
+                ? 'bg-white text-[#040507] shadow-sm'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Trophy className="h-3.5 w-3.5 shrink-0" />
+            <span>Ranks</span>
+          </button>
+        </nav>
       </div>
     </header>
   );

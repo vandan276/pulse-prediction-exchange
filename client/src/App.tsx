@@ -659,7 +659,7 @@ export default function App() {
   const decimals = currentTicker?.decimals ?? 2;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#040507]">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-[#040507]">
       <TopNav
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -695,7 +695,7 @@ export default function App() {
             />
           </div>
 
-          <div className="mx-auto flex w-full max-w-[1680px] flex-1 flex-col gap-4 px-4 py-4 xl:flex-row lg:px-5">
+          <div className="mx-auto flex w-full max-w-[1680px] flex-1 flex-col gap-3.5 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 xl:flex-row lg:px-5">
             {/* LEFT WATCHLIST RAIL (xl+) */}
             <div className="hidden xl:block">
               <MarketRail

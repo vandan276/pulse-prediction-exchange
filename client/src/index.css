@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   body {
     font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
