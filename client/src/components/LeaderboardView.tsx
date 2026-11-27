@@ -22,9 +22,9 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
   currentUserId,
 }) => {
   return (
-    <div className="mx-auto grid max-w-[1680px] grid-cols-1 gap-5 px-4 py-6 lg:grid-cols-12 lg:px-6">
+    <div className="mx-auto grid w-full min-w-0 max-w-[1680px] grid-cols-1 gap-5 px-3 py-4 sm:px-4 sm:py-6 lg:grid-cols-12 lg:px-6">
       {/* Top Traders Leaderboard */}
-      <div className="surface-card rounded-2xl p-5 lg:col-span-5">
+      <div className="surface-card min-w-0 rounded-2xl p-4 sm:p-5 lg:col-span-5">
         <div className="mb-4 flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F5B731]/15 text-[#F5B731]">
             <Trophy className="h-4.5 w-4.5" />

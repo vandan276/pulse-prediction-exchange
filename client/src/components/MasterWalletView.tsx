@@ -39,16 +39,16 @@ export const MasterWalletView: React.FC<MasterWalletViewProps> = ({
   const commodityCat = summary.byCategory.find((c) => c.category === 'commodity');
 
   return (
-    <div className="mx-auto max-w-[1680px] space-y-5 px-4 py-6 lg:px-6">
+    <div className="mx-auto w-full min-w-0 max-w-[1680px] space-y-5 px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
       {/* Liquid Gold Vault Hero */}
-      <div className="surface-vault relative overflow-hidden rounded-2xl p-6 sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#F5B731]/35 bg-[#F5B731]/12 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-[#F5B731]">
-              <Landmark className="h-3.5 w-3.5" />
-              Master Treasury Vault · Predictions (10%) + Originals House Bank
+      <div className="surface-vault relative overflow-hidden rounded-2xl p-4 sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-4 sm:gap-5">
+          <div className="min-w-0 max-w-full">
+            <div className="inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-xl sm:rounded-full border border-[#F5B731]/35 bg-[#F5B731]/12 px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#F5B731]">
+              <Landmark className="h-3.5 w-3.5 shrink-0" />
+              <span>Master Treasury Vault · Predictions (10%) + Originals</span>
             </div>
-            <h1 className="mt-3 font-mono text-4xl font-black tracking-tight text-white sm:text-5xl tabular-nums">
+            <h1 className="mt-3 font-mono text-3xl sm:text-5xl font-black tracking-tight text-white tabular-nums">
               {formatUsd(summary.combinedTreasuryCents ?? summary.totalBalanceCents)}
             </h1>
             <p className="mt-2 max-w-2xl text-xs leading-relaxed text-zinc-300">
@@ -66,7 +66,7 @@ export const MasterWalletView: React.FC<MasterWalletViewProps> = ({
             </p>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-[#05070A]/90 p-4 min-w-[280px]">
+          <div className="w-full sm:w-auto sm:min-w-[280px] rounded-xl border border-white/10 bg-[#05070A]/90 p-3.5 sm:p-4">
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
               Master Treasury Address (Web3 Ready)
             </div>
@@ -76,7 +76,7 @@ export const MasterWalletView: React.FC<MasterWalletViewProps> = ({
               </code>
               <button
                 onClick={copyAddress}
-                className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] font-semibold text-zinc-200 transition hover:bg-white/10"
+                className="flex shrink-0 items-center gap-1 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] font-semibold text-zinc-200 transition hover:bg-white/10"
               >
                 {copied ? (
                   <>
@@ -91,7 +91,7 @@ export const MasterWalletView: React.FC<MasterWalletViewProps> = ({
                 )}
               </button>
             </div>
-            <div className="mt-1.5 font-mono text-[10px] text-zinc-500 break-all max-w-[300px]">
+            <div className="mt-1.5 font-mono text-[10px] text-zinc-500 break-all sm:max-w-[300px]">
               {summary.address}
             </div>
           </div>
@@ -99,12 +99,12 @@ export const MasterWalletView: React.FC<MasterWalletViewProps> = ({
 
         {/* Visual 90 / 10 Conservation Split Bar */}
         <div className="mt-5">
-          <div className="mb-1.5 flex items-center justify-between font-mono text-[11px]">
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1 font-mono text-[10px] sm:text-[11px]">
             <span className="text-[#00E599] font-bold">
-              90% EQUAL WINNER DISTRIBUTION ({formatUsd(summary.totalDistributedCents)})
+              90% WINNERS ({formatUsd(summary.totalDistributedCents)})
             </span>
             <span className="text-[#F5B731] font-bold">
-              10% MASTER VAULT ({formatUsd(summary.totalBalanceCents)})
+              10% VAULT ({formatUsd(summary.totalBalanceCents)})
             </span>
           </div>
           <div className="flex h-2 w-full overflow-hidden rounded-full bg-white/[0.06] gap-[2px]">

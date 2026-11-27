@@ -226,10 +226,10 @@ export const OriginalsHub: React.FC<OriginalsHubProps> = ({
   };
 
   return (
-    <div className="mx-auto max-w-[1680px] space-y-5 px-4 py-5 lg:px-6">
+    <div className="mx-auto w-full min-w-0 max-w-[1680px] space-y-5 px-3 py-4 sm:px-4 sm:py-5 lg:px-6">
       {/* Top Originals Sub-Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex w-full lg:w-auto min-w-0 items-center gap-2 overflow-x-auto pb-1">
           <button
             onClick={() => setActiveGame('lobby')}
             className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
@@ -325,15 +325,15 @@ export const OriginalsHub: React.FC<OriginalsHubProps> = ({
       {activeGame === 'lobby' ? (
         <div className="space-y-6">
           {/* Hero Banner */}
-          <div className="surface-card relative overflow-hidden rounded-2xl p-6 sm:p-7">
+          <div className="surface-card relative overflow-hidden rounded-2xl p-4 sm:p-7">
             <div className="pointer-events-none absolute -right-12 -top-12 h-56 w-56 rounded-full bg-[#00E599]/10 blur-3xl" />
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#00E599]/30 bg-[#00E599]/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[#00E599]">
-                  <Sparkles className="h-3 w-3" />
-                  PULSE ORIGINALS · 99% RTP · PROVABLY FAIR
+              <div className="min-w-0">
+                <div className="inline-flex flex-wrap items-center gap-1.5 rounded-full border border-[#00E599]/30 bg-[#00E599]/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#00E599]">
+                  <Sparkles className="h-3 w-3 shrink-0" />
+                  <span>PULSE ORIGINALS · 99% RTP · PROVABLY FAIR</span>
                 </div>
-                <h1 className="mt-2.5 font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                <h1 className="mt-2.5 font-display text-xl sm:text-3xl font-bold tracking-tight text-white">
                   Instant House-Edge Originals Arcade
                 </h1>
                 <p className="mt-1 max-w-2xl text-xs text-zinc-400">
