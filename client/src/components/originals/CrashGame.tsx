@@ -272,7 +272,7 @@ export const CrashGame: React.FC<CrashGameProps> = ({
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       {/* Left Bet Controls */}
-      <div className="surface-card rounded-2xl p-4 lg:col-span-3 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-3 space-y-4">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
             <Rocket className="h-4 w-4 text-[#00E599]" />
@@ -388,7 +388,7 @@ export const CrashGame: React.FC<CrashGameProps> = ({
       </div>
 
       {/* Right High-DPI Live Rocket Stage */}
-      <div className="surface-card rounded-2xl p-4 lg:col-span-9 flex flex-col">
+      <div className="surface-card order-1 lg:order-2 rounded-2xl p-4 lg:col-span-9 flex flex-col">
         {/* Recent Crash History Pills */}
         <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1">
           <Flame className="h-4 w-4 shrink-0 text-[#F5B731]" />

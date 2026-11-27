@@ -272,7 +272,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
             <Sparkles className="h-4 w-4 text-[#F5B731]" />
@@ -368,7 +368,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
       </div>
 
       {/* Right 60fps Peg Pyramid Canvas */}
-      <div className="surface-card flex items-center justify-center rounded-2xl p-4 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex items-center justify-center rounded-2xl p-4 lg:col-span-8">
         <canvas
           ref={canvasRef}
           className="h-auto w-full max-w-[660px]"

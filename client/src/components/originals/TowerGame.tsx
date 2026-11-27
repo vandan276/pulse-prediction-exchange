@@ -136,7 +136,7 @@ export const TowerGame: React.FC<TowerGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
             <Flame className="h-4 w-4 text-[#F5B731]" />
@@ -198,7 +198,7 @@ export const TowerGame: React.FC<TowerGameProps> = ({
       </div>
 
       {/* Right 9-Floor Vertical Tower Ladder */}
-      <div className="surface-card flex flex-col items-center justify-center rounded-2xl p-5 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-2xl p-4 sm:p-5 lg:col-span-8">
         <div className="w-full max-w-[480px] space-y-1.5">
           {floors.map((floorIdx) => {
             const mult = Number((0.99 / Math.pow(safeProb, floorIdx + 1)).toFixed(2));

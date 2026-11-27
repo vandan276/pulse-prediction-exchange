@@ -66,7 +66,7 @@ export const DiceGame: React.FC<DiceGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
             <Dices className="h-4 w-4 text-[#00E599]" />
@@ -106,7 +106,7 @@ export const DiceGame: React.FC<DiceGameProps> = ({
       </div>
 
       {/* Right Interactive Neon Slider Stage */}
-      <div className="surface-card flex flex-col justify-between rounded-2xl p-6 lg:col-span-8 min-h-[380px]">
+      <div className="surface-card order-1 lg:order-2 flex flex-col justify-between rounded-2xl p-4 sm:p-6 lg:col-span-8 min-h-[300px] sm:min-h-[380px]">
         {/* Recent Rolls */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           {history.length === 0 ? (

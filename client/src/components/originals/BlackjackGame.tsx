@@ -223,7 +223,7 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       {/* Left Bet & Action Controls */}
-      <div className="surface-card rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
             <Spade className="h-4 w-4 text-[#00E599]" />
@@ -300,7 +300,7 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
       </div>
 
       {/* Right Luxury Card Table Stage */}
-      <div className="surface-card relative flex min-h-[460px] flex-col justify-between overflow-hidden rounded-2xl p-6 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 relative flex min-h-[340px] sm:min-h-[460px] flex-col justify-between overflow-hidden rounded-2xl p-4 sm:p-6 lg:col-span-8">
         {/* Dealer Zone */}
         <div className="flex flex-col items-center">
           <div className="mb-3 flex items-center gap-2">

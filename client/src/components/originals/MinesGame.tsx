@@ -131,7 +131,7 @@ export const MinesGame: React.FC<MinesGameProps> = ({
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       {/* Left Controls */}
-      <div className="surface-card rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
             <Diamond className="h-4 w-4 text-[#00E599]" />
@@ -214,7 +214,7 @@ export const MinesGame: React.FC<MinesGameProps> = ({
       </div>
 
       {/* Right 5x5 Obsidian Grid */}
-      <div className="surface-card flex flex-col items-center justify-center rounded-2xl p-6 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-2xl p-4 sm:p-6 lg:col-span-8">
         <div className="mb-4 flex w-full max-w-[440px] items-center justify-between font-mono text-xs">
           <span className="text-zinc-400">
             Multiplier:{' '}

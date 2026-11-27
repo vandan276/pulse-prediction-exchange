@@ -188,7 +188,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
             <Disc3 className="h-4 w-4 text-[#A855F7]" />
@@ -260,7 +260,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
       </div>
 
       {/* Right Spinning Canvas */}
-      <div className="surface-card flex flex-col items-center justify-center rounded-2xl p-6 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-2xl p-4 sm:p-6 lg:col-span-8">
         <div className="relative flex items-center justify-center">
           <canvas
             ref={canvasRef}
