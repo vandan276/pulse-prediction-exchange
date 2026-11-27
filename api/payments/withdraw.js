@@ -25,9 +25,9 @@ module.exports = async function handler(req, res) {
     }
 
     const parsedAmount = Math.round(Number(amountCents || 0));
-    if (parsedAmount < method.minWithdrawCents) {
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       return res.status(400).json({
-        error: `Minimum withdrawal for ${method.label} is $${(method.minWithdrawCents / 100).toFixed(2)}`,
+        error: 'Please enter a withdrawal amount greater than $0.00',
       });
     }
 

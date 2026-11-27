@@ -600,7 +600,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                     </label>
                     {activeMethod && (
                       <span className="font-mono text-[10px] text-zinc-500">
-                        Min {formatUsd(activeMethod.minDepositCents)} · 0% Fee
+                        No Minimum · 0% Fee
                       </span>
                     )}
                   </div>
@@ -608,8 +608,8 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                     <span className="font-mono text-base font-bold text-[#00E599]">$</span>
                     <input
                       type="number"
-                      min="10"
-                      step="1"
+                      min="0.01"
+                      step="any"
                       required
                       value={depositDollars}
                       onChange={(e) => setDepositDollars(e.target.value)}
@@ -643,7 +643,9 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                 <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-[#05070A] px-3 py-2 text-[11px] text-zinc-400">
                   <ShieldCheck className="h-4 w-4 shrink-0 text-[#00E599]" />
                   <span>
-                    Adapter-ready gateway: drop your live API keys in <code className="font-mono">.env</code> to switch from Sandbox to live processing.
+                    {!isSandbox
+                      ? 'Live USDTautopay gateway connected — deposits credit automatically after BSC confirmation.'
+                      : 'Sandbox gateway active — configure live API keys to process real transactions.'}
                   </span>
                 </div>
               </form>
@@ -715,7 +717,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                         type="button"
                         onClick={() => {
                           const v = Math.floor(((user?.balanceCents ?? 0) * frac)) / 100;
-                          setWithdrawDollars(Math.max(10, v).toFixed(2).replace(/\.00$/, ''));
+                          setWithdrawDollars(v.toFixed(2).replace(/\.00$/, ''));
                         }}
                         className="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[10px] font-bold text-zinc-300 hover:text-white"
                       >
@@ -728,8 +730,8 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                   <span className="font-mono text-base font-bold text-[#00E599]">$</span>
                   <input
                     type="number"
-                    min="10"
-                    step="1"
+                    min="0.01"
+                    step="any"
                     required
                     value={withdrawDollars}
                     onChange={(e) => setWithdrawDollars(e.target.value)}

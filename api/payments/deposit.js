@@ -20,9 +20,9 @@ module.exports = async function handler(req, res) {
     if (!method) return res.status(400).json({ error: `Unsupported asset: ${asset}` });
 
     const parsedAmount = Math.round(Number(amountCents || 0));
-    if (parsedAmount < method.minDepositCents) {
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       return res.status(400).json({
-        error: `Minimum deposit for ${method.label} is $${(method.minDepositCents / 100).toFixed(2)}`,
+        error: 'Please enter a deposit amount greater than $0.00',
       });
     }
 

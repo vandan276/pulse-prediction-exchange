@@ -8,9 +8,9 @@ const PAYMENT_METHODS = [
     rail: 'CRYPTO',
     label: 'USDT (BEP-20)',
     network: 'BSC Mainnet · USDTautopay',
-    minDepositCents: 500, // $5.00
+    minDepositCents: 0,
     maxDepositCents: 10_000_000, // $100,000
-    minWithdrawCents: 1000, // $10.00
+    minWithdrawCents: 0,
     maxWithdrawCents: 5_000_000,
     depositFeeFlatCents: 0,
     withdrawFeeFlatCents: 100, // $1.00
@@ -24,9 +24,9 @@ const PAYMENT_METHODS = [
     rail: 'CRYPTO',
     label: 'USDT (TRC20)',
     network: 'TRON',
-    minDepositCents: 1000,
+    minDepositCents: 0,
     maxDepositCents: 10_000_000,
-    minWithdrawCents: 1000,
+    minWithdrawCents: 0,
     maxWithdrawCents: 5_000_000,
     depositFeeFlatCents: 0,
     withdrawFeeFlatCents: 100,
@@ -39,9 +39,9 @@ const PAYMENT_METHODS = [
     rail: 'CRYPTO',
     label: 'USDT (ERC20)',
     network: 'Ethereum',
-    minDepositCents: 2000,
+    minDepositCents: 0,
     maxDepositCents: 10_000_000,
-    minWithdrawCents: 2000,
+    minWithdrawCents: 0,
     maxWithdrawCents: 5_000_000,
     depositFeeFlatCents: 0,
     withdrawFeeFlatCents: 300,
@@ -54,9 +54,9 @@ const PAYMENT_METHODS = [
     rail: 'CRYPTO',
     label: 'Bitcoin (BTC)',
     network: 'Bitcoin Mainnet',
-    minDepositCents: 2000,
+    minDepositCents: 0,
     maxDepositCents: 10_000_000,
-    minWithdrawCents: 2500,
+    minWithdrawCents: 0,
     maxWithdrawCents: 5_000_000,
     depositFeeFlatCents: 0,
     withdrawFeeFlatCents: 250,
@@ -69,9 +69,9 @@ const PAYMENT_METHODS = [
     rail: 'CRYPTO',
     label: 'Solana (SOL)',
     network: 'Solana',
-    minDepositCents: 1000,
+    minDepositCents: 0,
     maxDepositCents: 10_000_000,
-    minWithdrawCents: 1000,
+    minWithdrawCents: 0,
     maxWithdrawCents: 5_000_000,
     depositFeeFlatCents: 0,
     withdrawFeeFlatCents: 25,
@@ -84,9 +84,9 @@ const PAYMENT_METHODS = [
     rail: 'UPI',
     label: 'UPI Instant',
     network: 'NPCI / Razorpay',
-    minDepositCents: 1000,
+    minDepositCents: 0,
     maxDepositCents: 2_500_000,
-    minWithdrawCents: 1000,
+    minWithdrawCents: 0,
     maxWithdrawCents: 2_500_000,
     depositFeeFlatCents: 0,
     withdrawFeeFlatCents: 0,
@@ -99,9 +99,9 @@ const PAYMENT_METHODS = [
     rail: 'CARD',
     label: 'Visa / Mastercard',
     network: 'Stripe / Gateway',
-    minDepositCents: 1000,
+    minDepositCents: 0,
     maxDepositCents: 5_000_000,
-    minWithdrawCents: 2000,
+    minWithdrawCents: 0,
     maxWithdrawCents: 2_500_000,
     depositFeeFlatCents: 0,
     withdrawFeeFlatCents: 150,
@@ -114,9 +114,9 @@ const PAYMENT_METHODS = [
     rail: 'BANK',
     label: 'Bank Transfer (IMPS / Wire)',
     network: 'Direct Bank Rail',
-    minDepositCents: 2500,
+    minDepositCents: 0,
     maxDepositCents: 10_000_000,
-    minWithdrawCents: 2500,
+    minWithdrawCents: 0,
     maxWithdrawCents: 10_000_000,
     depositFeeFlatCents: 0,
     withdrawFeeFlatCents: 0,
@@ -202,10 +202,8 @@ class PaymentGatewayService extends EventEmitter {
     if (!method) throw new Error(`Unsupported payment method: ${asset}`);
 
     const parsedAmount = Math.round(Number(amountCents));
-    if (!Number.isFinite(parsedAmount) || parsedAmount < method.minDepositCents) {
-      throw new Error(
-        `Minimum deposit for ${method.label} is $${(method.minDepositCents / 100).toFixed(2)}`
-      );
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      throw new Error('Please enter a deposit amount greater than $0.00');
     }
     if (parsedAmount > method.maxDepositCents) {
       throw new Error(
@@ -421,10 +419,8 @@ class PaymentGatewayService extends EventEmitter {
     }
 
     const parsedAmount = Math.round(Number(amountCents));
-    if (!Number.isFinite(parsedAmount) || parsedAmount < method.minWithdrawCents) {
-      throw new Error(
-        `Minimum withdrawal for ${method.label} is $${(method.minWithdrawCents / 100).toFixed(2)}`
-      );
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      throw new Error('Please enter a withdrawal amount greater than $0.00');
     }
     if (parsedAmount > method.maxWithdrawCents) {
       throw new Error(
