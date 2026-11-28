@@ -72,19 +72,66 @@ const DEFAULT_TIERS: StakeTier[] = [
   { id: 'tier_100', label: '$100', amountCents: 10000 },
 ];
 
+const VALID_GAMES: OriginalGameId[] = [
+  'lobby',
+  'blackjack',
+  'crash',
+  'pump',
+  'mines',
+  'plinko',
+  'dice',
+  'limbo',
+  'keno',
+  'tower',
+  'wheel',
+];
+
+function parseUrlRoute(pathname: string): {
+  isLanding: boolean;
+  tab: AppTab;
+  game: OriginalGameId;
+} {
+  const clean = pathname.replace(/\/+$/, '') || '/';
+  if (clean === '/' || clean === '/home') {
+    return { isLanding: true, tab: 'arena', game: 'lobby' };
+  }
+  if (clean === '/markets' || clean === '/arena') {
+    return { isLanding: false, tab: 'arena', game: 'lobby' };
+  }
+  if (clean === '/vault' || clean === '/master-vault') {
+    return { isLanding: false, tab: 'master_wallet', game: 'lobby' };
+  }
+  if (clean === '/leaderboard' || clean === '/ranks') {
+    return { isLanding: false, tab: 'leaderboard', game: 'lobby' };
+  }
+  if (clean === '/originals' || clean.startsWith('/originals/')) {
+    const seg = clean.split('/')[2] as OriginalGameId | undefined;
+    const game = seg && VALID_GAMES.includes(seg) ? seg : 'lobby';
+    return { isLanding: false, tab: 'originals', game };
+  }
+  return { isLanding: true, tab: 'arena', game: 'lobby' };
+}
+
+function tabToPath(tab: AppTab, game?: OriginalGameId): string {
+  if (tab === 'arena') return '/markets';
+  if (tab === 'master_wallet') return '/vault';
+  if (tab === 'leaderboard') return '/leaderboard';
+  return game && game !== 'lobby' ? `/originals/${game}` : '/originals';
+}
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<AppTab>('arena');
+  const initialRoute = useMemo(() => parseUrlRoute(window.location.pathname), []);
+  const [activeTab, setActiveTab] = useState<AppTab>(initialRoute.tab);
   const [connected, setConnected] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('pulse_theme_v3');
     return saved === 'dark' ? 'dark' : 'light';
   });
   const [authChecked, setAuthChecked] = useState(false);
-  const [showLanding, setShowLanding] = useState(
-    () => sessionStorage.getItem('pulse_entered') !== '1'
+  const [showLanding, setShowLanding] = useState(initialRoute.isLanding);
+  const [activeOriginalGame, setActiveOriginalGame] = useState<OriginalGameId>(
+    initialRoute.game
   );
-  const [landingForced, setLandingForced] = useState(false);
-  const [activeOriginalGame, setActiveOriginalGame] = useState<OriginalGameId>('lobby');
 
   const [tickers, setTickers] = useState<MarketTicker[]>([]);
   const [timeframes, setTimeframes] = useState<TimeframeOption[]>(DEFAULT_TIMEFRAMES);
@@ -120,7 +167,19 @@ export default function App() {
   const clockOffsetRef = useRef<number>(0);
   const lastPriceRef = useRef<number | null>(null);
 
-  const landingVisible = authChecked && showLanding && (!user || landingForced);
+  const landingVisible = showLanding;
+
+  // Keep state synced with Browser Back/Forward navigation
+  useEffect(() => {
+    const onPopState = () => {
+      const next = parseUrlRoute(window.location.pathname);
+      setShowLanding(next.isLanding);
+      setActiveTab(next.tab);
+      setActiveOriginalGame(next.game);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.remove('light', 'dark');
@@ -190,23 +249,33 @@ export default function App() {
     setAuthModalOpen(true);
   }, []);
 
-  const enterApp = useCallback((tab?: AppTab) => {
-    sessionStorage.setItem('pulse_entered', '1');
+  const enterApp = useCallback((tab: AppTab = 'arena') => {
+    const nextPath = tabToPath(tab, tab === 'originals' ? 'lobby' : undefined);
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath);
+    }
     setShowLanding(false);
-    setLandingForced(false);
-    if (tab) setActiveTab(tab);
+    setActiveTab(tab);
+    if (tab === 'originals') setActiveOriginalGame('lobby');
     window.scrollTo(0, 0);
   }, []);
 
   const openOriginalGame = useCallback((game: OriginalGameId) => {
+    const nextPath = tabToPath('originals', game);
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath);
+    }
+    setShowLanding(false);
     setActiveOriginalGame(game);
     setActiveTab('originals');
     window.scrollTo({ top: 0 });
   }, []);
 
   const openLanding = useCallback(() => {
+    if (window.location.pathname !== '/') {
+      window.history.pushState({}, '', '/');
+    }
     setShowLanding(true);
-    setLandingForced(true);
     window.scrollTo(0, 0);
   }, []);
 
@@ -218,9 +287,11 @@ export default function App() {
       }
       localStorage.setItem('pulsepredict_user_id', nextUser.id);
       localStorage.setItem('pulsepredict_username', nextUser.username);
-      sessionStorage.setItem('pulse_entered', '1');
-      setShowLanding(false);
-      setLandingForced(false);
+      if (window.location.pathname === '/' || window.location.pathname === '/home') {
+        window.history.pushState({}, '', '/markets');
+        setShowLanding(false);
+        setActiveTab('arena');
+      }
       socketRef.current?.emit('user:identify', { userId: nextUser.id });
       fetchUserBets(nextUser.id);
     },
@@ -283,8 +354,6 @@ export default function App() {
     localStorage.removeItem('pulse_auth_token');
     localStorage.removeItem('pulsepredict_user_id');
     localStorage.removeItem('pulsepredict_username');
-    sessionStorage.setItem('pulse_entered', '1');
-    setLandingForced(false);
     setUser(null);
     setUserBets([]);
     socketRef.current?.emit('user:identify', { userId: null });
@@ -719,7 +788,7 @@ export default function App() {
   const livePrice = currentTicker?.price ?? roomSnapshot?.currentPrice ?? 0;
   const decimals = currentTicker?.decimals ?? 2;
 
-  if (!authChecked) {
+  if (!authChecked && !showLanding) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-base">
         <div className="flex flex-col items-center gap-3 animate-pulse">
@@ -751,14 +820,18 @@ export default function App() {
           tickers={tickers}
           globalStats={globalStats}
           masterWallet={masterWallet}
+          user={user}
           onSignUp={() => openAuthModal('signup')}
           onSignIn={() => openAuthModal('login')}
           onEnterApp={enterApp}
-          onOpenGame={(g) => {
-            sessionStorage.setItem('pulse_entered', '1');
-            setShowLanding(false);
-            setLandingForced(false);
-            openOriginalGame(g);
+          onOpenGame={openOriginalGame}
+          onOpenCashier={(tab) => {
+            if (!user) {
+              openAuthModal('signup');
+              return;
+            }
+            setCashierTab(tab);
+            setCashierOpen(true);
           }}
           theme={theme}
           onToggleTheme={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
@@ -773,10 +846,17 @@ export default function App() {
           onSignUp={handleSignUp}
           onLogout={handleLogout}
           onOpenCashier={(tab) => {
-            enterApp('arena');
             setCashierTab(tab);
             setCashierOpen(true);
           }}
+        />
+        <CashierModal
+          isOpen={cashierOpen}
+          initialTab={cashierTab}
+          onClose={() => setCashierOpen(false)}
+          user={user}
+          onUserUpdated={setUser}
+          onToast={pushToast}
         />
         <ToastStack toasts={toasts} />
       </>
@@ -787,10 +867,7 @@ export default function App() {
     <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-base pb-20 md:pb-0">
       <TopNav
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          window.scrollTo({ top: 0 });
-        }}
+        onTabChange={enterApp}
         connected={connected}
         globalStats={globalStats}
         masterWallet={masterWallet}
@@ -1105,7 +1182,7 @@ export default function App() {
           onToast={pushToast}
           onOpenUserModal={() => openAuthModal('login')}
           activeGame={activeOriginalGame}
-          onGameChange={setActiveOriginalGame}
+          onGameChange={openOriginalGame}
           theme={theme}
         />
       )}
@@ -1124,10 +1201,7 @@ export default function App() {
 
       <MobileTabBar
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          window.scrollTo({ top: 0 });
-        }}
+        onTabChange={enterApp}
         onOpenCasino={() => openOriginalGame('lobby')}
         onOpenWallet={() => {
           if (!user) {

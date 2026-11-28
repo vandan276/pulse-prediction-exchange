@@ -76,10 +76,11 @@ export const TopNav: React.FC<TopNavProps> = ({
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-line bg-surface/95 backdrop-blur-xl">
       <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between gap-3 px-3 sm:px-6">
-        {/* Left: Crisp Black-Circle PULSE Brand */}
+        {/* Left: Crisp Black-Circle PULSE Brand -> Permanent Home / Landing Page (/) */}
         <div className="flex items-center gap-3 shrink-0">
           <button
-            onClick={() => onTabChange('arena')}
+            onClick={onOpenLanding}
+            title="Home"
             className="flex items-center gap-2 transition hover:opacity-85"
           >
             <PulseMark />
@@ -103,6 +104,12 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         {/* Center: Minimalist Pill Tabs (Option 3 Signature) */}
         <nav className="hidden md:flex items-center gap-0.5 rounded-full border border-line bg-surface p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <button
+            onClick={onOpenLanding}
+            className="rounded-full px-4 py-1.5 text-sm font-medium text-muted transition-all hover:text-fg"
+          >
+            Home
+          </button>
           {navTabs.map((t) => {
             const active = activeTab === t.id;
             return (

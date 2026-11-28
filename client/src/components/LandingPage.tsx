@@ -24,6 +24,7 @@ import {
   MarketTicker,
   MasterWalletSummary,
   OriginalGameId,
+  UserProfile,
 } from '../types';
 import { formatPrice, formatUsd } from '../utils/format';
 import { PulseMark } from './TopNav';
@@ -33,10 +34,12 @@ interface LandingPageProps {
   tickers: MarketTicker[];
   globalStats: GlobalStats | null;
   masterWallet: MasterWalletSummary | null;
+  user?: UserProfile | null;
   onSignUp: () => void;
   onSignIn: () => void;
   onEnterApp: (tab?: AppTab) => void;
   onOpenGame?: (game: OriginalGameId) => void;
+  onOpenCashier?: (tab: 'deposit' | 'withdraw') => void;
   theme: 'light' | 'dark';
   onToggleTheme?: () => void;
   isLoggedIn?: boolean;
@@ -73,10 +76,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   tickers,
   globalStats,
   masterWallet,
+  user,
   onSignUp,
   onSignIn,
   onEnterApp,
   onOpenGame,
+  onOpenCashier,
   theme,
   onToggleTheme,
   isLoggedIn = false,
@@ -94,14 +99,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* 1. Minimalist Apex Pro Fintech Header (Matches Option 3 Mockup) */}
       <header className="sticky top-0 z-40 h-16 border-b border-line bg-surface/95 backdrop-blur-xl">
         <div className="mx-auto flex h-full max-w-[1360px] items-center justify-between gap-3 px-4 sm:px-6">
-          <button onClick={() => onEnterApp('arena')} className="shrink-0">
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="shrink-0"
+          >
             <PulseMark />
           </button>
 
           <nav className="hidden md:flex items-center gap-0.5 rounded-full border border-line bg-surface p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="rounded-full bg-raised px-4 py-1.5 text-sm font-semibold text-fg shadow-[inset_0_0_0_1px_rgb(var(--line))]"
+            >
+              Home
+            </button>
+            <button
               onClick={() => onEnterApp('arena')}
-              className="rounded-full bg-raised px-4 py-1.5 text-sm font-semibold text-fg"
+              className="rounded-full px-4 py-1.5 text-sm font-medium text-muted transition hover:text-fg"
             >
               Markets
             </button>
@@ -136,14 +150,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 {isDark ? <Sun className="h-4 w-4 text-gold" /> : <Moon className="h-4 w-4" />}
               </button>
             )}
-            {isLoggedIn ? (
-              <button
-                onClick={() => onEnterApp('arena')}
-                className="flex h-9 items-center gap-1.5 rounded-full bg-fg px-4 text-xs sm:text-sm font-semibold text-inverse transition hover:opacity-90"
-              >
-                <span>Back to App</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+            {isLoggedIn && user ? (
+              <>
+                <button
+                  onClick={() =>
+                    onOpenCashier ? onOpenCashier('deposit') : onEnterApp('arena')
+                  }
+                  className="btn-glow flex h-9 items-center gap-1 rounded-full bg-accent px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-onaccent transition hover:brightness-105"
+                >
+                  <Plus className="h-3.5 w-3.5 stroke-[2.8]" />
+                  <span className="hidden sm:inline">Deposit USDT</span>
+                  <span className="sm:hidden">Deposit</span>
+                </button>
+                <button
+                  onClick={onSignIn}
+                  className="flex h-9 items-center gap-2 rounded-full border border-line bg-surface pl-3 pr-1.5 text-xs sm:text-sm font-semibold text-fg transition hover:bg-raised"
+                >
+                  <span className="font-mono font-bold tabular-nums">
+                    {formatUsd(user.balanceCents)}
+                  </span>
+                  <span
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                    style={{ backgroundColor: user.avatarColor }}
+                  >
+                    {user.username.slice(0, 1).toUpperCase()}
+                  </span>
+                </button>
+              </>
             ) : (
               <>
                 <button
@@ -153,7 +186,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   Sign In
                 </button>
                 <button
-                  onClick={onSignUp}
+                  onClick={() =>
+                    onOpenCashier ? onOpenCashier('deposit') : onSignUp()
+                  }
                   className="btn-glow hidden sm:flex h-9 items-center gap-1 rounded-full bg-accent px-4 text-sm font-semibold text-onaccent transition hover:brightness-105"
                 >
                   <Plus className="h-3.5 w-3.5 stroke-[2.8]" />
