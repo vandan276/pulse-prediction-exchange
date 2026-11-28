@@ -17,6 +17,7 @@ import {
   MarketTicker,
   MasterWalletSummary,
   OriginalBetRecord,
+  OriginalGameId,
   PricePoint,
   RoomSnapshot,
   SettledRound,
@@ -43,6 +44,8 @@ import { CashierModal } from './components/CashierModal';
 import { AuthModal, AuthModalMode } from './components/AuthModal';
 import { LandingPage } from './components/LandingPage';
 import { LiveWinsTicker } from './components/LiveWinsTicker';
+import { MobileTabBar } from './components/MobileTabBar';
+import { BENTO_GAMES, BentoArtwork } from './components/originals/BentoGameCards';
 import { ToastStack } from './components/ToastStack';
 import { getStandaloneRuntime, isStandaloneMode } from './standalone/liveRuntime';
 
@@ -73,7 +76,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<AppTab>('arena');
   const [connected, setConnected] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('pulse_theme');
+    const saved = localStorage.getItem('pulse_theme_v3');
     return saved === 'dark' ? 'dark' : 'light';
   });
   const [authChecked, setAuthChecked] = useState(false);
@@ -81,6 +84,7 @@ export default function App() {
     () => sessionStorage.getItem('pulse_entered') !== '1'
   );
   const [landingForced, setLandingForced] = useState(false);
+  const [activeOriginalGame, setActiveOriginalGame] = useState<OriginalGameId>('lobby');
 
   const [tickers, setTickers] = useState<MarketTicker[]>([]);
   const [timeframes, setTimeframes] = useState<TimeframeOption[]>(DEFAULT_TIMEFRAMES);
@@ -119,11 +123,13 @@ export default function App() {
   const landingVisible = authChecked && showLanding && (!user || landingForced);
 
   useEffect(() => {
-    const effectiveTheme = landingVisible ? 'dark' : theme;
     document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(effectiveTheme);
-    localStorage.setItem('pulse_theme', theme);
-  }, [theme, landingVisible]);
+    document.documentElement.classList.add(theme);
+    localStorage.setItem('pulse_theme_v3', theme);
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === 'dark' ? '#0B0D11' : '#F8F9FB');
+  }, [theme]);
 
   const socketRef = useRef<Socket | null>(null);
   const selectedSymbolRef = useRef<string>(selectedSymbol);
@@ -190,6 +196,12 @@ export default function App() {
     setLandingForced(false);
     if (tab) setActiveTab(tab);
     window.scrollTo(0, 0);
+  }, []);
+
+  const openOriginalGame = useCallback((game: OriginalGameId) => {
+    setActiveOriginalGame(game);
+    setActiveTab('originals');
+    window.scrollTo({ top: 0 });
   }, []);
 
   const openLanding = useCallback(() => {
@@ -369,7 +381,12 @@ export default function App() {
         lastPriceRef.current = match.price;
 
         setPriceHistory((prev) => {
-          const next = [...prev, { time: serverTime, price: match.price }];
+          const lastPt = prev[prev.length - 1];
+          const baseList =
+            lastPt && lastPt.price > 0 && Math.abs(match.price - lastPt.price) / lastPt.price > 0.08
+              ? prev.map((pt) => ({ ...pt, price: pt.price * (match.price / lastPt.price) }))
+              : prev;
+          const next = [...baseList, { time: serverTime, price: match.price }];
           return next.length > 220 ? next.slice(-220) : next;
         });
 
@@ -387,7 +404,20 @@ export default function App() {
               },
             ];
           }
-          const next = [...prev];
+          const prevLast = prev[prev.length - 1];
+          const next =
+            prevLast && prevLast.close > 0 && Math.abs(match.price - prevLast.close) / prevLast.close > 0.08
+              ? prev.map((c) => {
+                  const r = match.price / prevLast.close;
+                  return {
+                    ...c,
+                    open: c.open * r,
+                    high: c.high * r,
+                    low: c.low * r,
+                    close: c.close * r,
+                  };
+                })
+              : [...prev];
           const last = { ...next[next.length - 1] };
           if (bucket > last.time) {
             next.push({
@@ -691,13 +721,13 @@ export default function App() {
 
   if (!authChecked) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-[#07050F]">
+      <div className="flex min-h-screen w-full items-center justify-center bg-base">
         <div className="flex flex-col items-center gap-3 animate-pulse">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#00E599] shadow-[0_0_32px_rgba(0,229,153,0.45)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent shadow-[0_0_32px_rgba(0,200,83,0.45)]">
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              className="h-6 w-6 text-[#040507]"
+              className="h-6 w-6 text-onaccent"
               stroke="currentColor"
               strokeWidth="2.8"
               strokeLinecap="round"
@@ -706,7 +736,7 @@ export default function App() {
               <polyline points="22 12 18 12 15 20 9 4 6 12 2 12" />
             </svg>
           </div>
-          <span className="font-display text-sm font-bold tracking-widest text-white">
+          <span className="font-display text-sm font-bold tracking-widest text-fg">
             PULSE EXCHANGE
           </span>
         </div>
@@ -724,7 +754,14 @@ export default function App() {
           onSignUp={() => openAuthModal('signup')}
           onSignIn={() => openAuthModal('login')}
           onEnterApp={enterApp}
+          onOpenGame={(g) => {
+            sessionStorage.setItem('pulse_entered', '1');
+            setShowLanding(false);
+            setLandingForced(false);
+            openOriginalGame(g);
+          }}
           theme={theme}
+          onToggleTheme={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
           isLoggedIn={Boolean(user)}
         />
         <AuthModal
@@ -747,10 +784,13 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-[#040507]">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-base pb-20 md:pb-0">
       <TopNav
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0 });
+        }}
         connected={connected}
         globalStats={globalStats}
         masterWallet={masterWallet}
@@ -780,8 +820,8 @@ export default function App() {
 
       {activeTab === 'arena' && (
         <div className="flex-1 flex flex-col">
-          {/* Responsive layout: Mobile Market Strip inside MarketRail + Desktop 3-Zone Exchange Grid */}
-          <div className="xl:hidden">
+          {/* Compact Horizontal Market Selector Strip */}
+          <div className="2xl:hidden">
             <MarketRail
               tickers={tickers}
               selectedSymbol={selectedSymbol}
@@ -790,9 +830,9 @@ export default function App() {
             />
           </div>
 
-          <div className="mx-auto flex w-full max-w-[1680px] flex-1 flex-col gap-3.5 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 xl:flex-row lg:px-5">
+          <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-4 px-3 py-4 sm:px-6 sm:py-6 xl:flex-row">
             {/* LEFT WATCHLIST RAIL (xl+) */}
-            <div className="hidden xl:block">
+            <div className="hidden 2xl:block">
               <MarketRail
                 tickers={tickers}
                 selectedSymbol={selectedSymbol}
@@ -804,7 +844,7 @@ export default function App() {
             {/* CENTER HERO TERMINAL */}
             <main className="min-w-0 flex-1 space-y-3.5">
               {/* Instrument Command Bar + Hero Chart */}
-              <div className="surface-card rounded-2xl p-4">
+              <div className="surface-card rounded-xl p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                   {/* Left: Symbol + Big Price + 24h Telemetry */}
                   <div>
@@ -812,20 +852,20 @@ export default function App() {
                       <span
                         className="h-2.5 w-2.5 rounded-full"
                         style={{
-                          backgroundColor: currentTicker?.accent ?? '#00E599',
+                          backgroundColor: currentTicker?.accent ?? '#00C853',
                         }}
                       />
-                      <h1 className="font-display text-lg font-bold tracking-tight text-white">
+                      <h1 className="font-display text-lg font-bold tracking-tight text-fg">
                         {selectedSymbol}
                       </h1>
-                      <span className="text-xs font-medium text-zinc-500">
+                      <span className="text-xs font-medium text-subtle">
                         {currentTicker?.name}
                       </span>
                       <span
                         className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${
                           currentTicker?.source === 'binance_live'
-                            ? 'bg-[#00E599]/12 text-[#00E599]'
-                            : 'bg-[#F5B731]/12 text-[#F5B731]'
+                            ? 'bg-accent/12 text-accent'
+                            : 'bg-gold/12 text-gold'
                         }`}
                       >
                         <Radio className="h-2.5 w-2.5" />
@@ -839,7 +879,7 @@ export default function App() {
 
                     <div className="mt-1 flex flex-wrap items-baseline gap-3">
                       <span
-                        className={`font-mono text-3xl font-extrabold tracking-tight text-white tabular-nums ${
+                        className={`font-mono text-3xl font-extrabold tracking-tight text-fg tabular-nums ${
                           priceFlash === 'up'
                             ? 'flash-up'
                             : priceFlash === 'down'
@@ -854,8 +894,8 @@ export default function App() {
                           <span
                             className={`inline-flex items-center gap-1 font-mono text-xs font-bold tabular-nums ${
                               currentTicker.changePercent >= 0
-                                ? 'text-[#00E599]'
-                                : 'text-[#FF3B69]'
+                                ? 'text-accent'
+                                : 'text-danger'
                             }`}
                           >
                             {currentTicker.changePercent >= 0 ? (
@@ -866,7 +906,7 @@ export default function App() {
                             {currentTicker.changePercent >= 0 ? '+' : ''}
                             {currentTicker.changePercent.toFixed(2)}%
                           </span>
-                          <span className="hidden md:inline font-mono text-[11px] text-zinc-500 tabular-nums">
+                          <span className="hidden md:inline font-mono text-[11px] text-subtle tabular-nums">
                             H ${formatPrice(currentTicker.high24h, decimals)} · L $
                             {formatPrice(currentTicker.low24h, decimals)}
                           </span>
@@ -877,14 +917,14 @@ export default function App() {
 
                   {/* Right: Chart Mode Toggle + All 7 Timeframes */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center rounded-xl border border-white/[0.07] bg-[#05070A] p-0.5">
+                    <div className="flex items-center rounded-xl border border-fg/[0.07] bg-raised p-0.5">
                       <button
                         onClick={() => setChartMode('candles')}
                         title="Candlestick chart"
                         className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold transition ${
                           chartMode === 'candles'
-                            ? 'bg-white text-[#040507]'
-                            : 'text-zinc-400 hover:text-white'
+                            ? 'bg-fg text-inverse'
+                            : 'text-muted hover:text-fg'
                         }`}
                       >
                         <CandlestickChart className="h-3.5 w-3.5" />
@@ -895,8 +935,8 @@ export default function App() {
                         title="Area line chart"
                         className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold transition ${
                           chartMode === 'line'
-                            ? 'bg-white text-[#040507]'
-                            : 'text-zinc-400 hover:text-white'
+                            ? 'bg-fg text-inverse'
+                            : 'text-muted hover:text-fg'
                         }`}
                       >
                         <Activity className="h-3.5 w-3.5" />
@@ -904,7 +944,7 @@ export default function App() {
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-0.5 rounded-xl border border-white/[0.07] bg-[#05070A] p-0.5">
+                    <div className="flex flex-wrap items-center gap-0.5 rounded-xl border border-fg/[0.07] bg-raised p-0.5">
                       {timeframes.map((tf) => {
                         const active = tf.id === selectedTimeframe;
                         const tfPlayers =
@@ -915,8 +955,8 @@ export default function App() {
                             onClick={() => setSelectedTimeframe(tf.id)}
                             className={`flex items-center gap-1 rounded-lg px-2 py-1 font-mono text-[11px] font-bold transition ${
                               active
-                                ? 'bg-[#00E599] text-[#040507] shadow-[0_0_16px_rgba(0,229,153,0.3)]'
-                                : 'text-zinc-400 hover:bg-white/[0.05] hover:text-white'
+                                ? 'bg-accent text-onaccent shadow-[0_0_16px_rgba(0,200,83,0.3)]'
+                                : 'text-muted hover:bg-fg/[0.05] hover:text-fg'
                             }`}
                           >
                             <span>{tf.shortLabel}</span>
@@ -924,8 +964,8 @@ export default function App() {
                               <span
                                 className={`rounded px-1 text-[9px] tabular-nums ${
                                   active
-                                    ? 'bg-black/20 text-[#040507]'
-                                    : 'bg-white/[0.07] text-[#00E599]'
+                                    ? 'bg-black/20 text-onaccent'
+                                    : 'bg-fg/[0.07] text-accent'
                                 }`}
                               >
                                 {tfPlayers}
@@ -981,7 +1021,7 @@ export default function App() {
             </main>
 
             {/* RIGHT EXECUTION & LIVE ORDERFLOW SIDEBAR */}
-            <aside className="w-full xl:w-[348px] shrink-0 space-y-3.5">
+            <aside className="w-full xl:w-[360px] shrink-0 space-y-4">
               {roomSnapshot && (
                 <>
                   <BetTicketPanel
@@ -1008,6 +1048,50 @@ export default function App() {
               )}
             </aside>
           </div>
+
+          {/* Option 3 Signature: Quick-Launch 4-Card Pastel Bento Originals Strip */}
+          <div className="mx-auto w-full max-w-[1440px] px-3 pb-8 sm:px-6">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-display text-sm font-bold text-fg">
+                Instant Provably-Fair Originals
+              </h2>
+              <button
+                onClick={() => openOriginalGame('lobby')}
+                className="text-xs font-semibold text-info hover:underline"
+              >
+                All 10 Originals →
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {BENTO_GAMES.slice(0, 4).map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => openOriginalGame(g.id)}
+                  style={{
+                    backgroundColor: theme === 'dark' ? g.darkBg : g.lightBg,
+                    borderColor: theme === 'dark' ? g.darkBorder : g.lightBorder,
+                  }}
+                  className="bento-tile group flex items-center justify-between gap-2 rounded-2xl border p-4 text-left"
+                >
+                  <div>
+                    <div className="font-display text-lg font-extrabold text-fg">
+                      {g.name}
+                    </div>
+                    <div
+                      className="mt-1 font-mono text-[11px] font-bold"
+                      style={{ color: g.accent }}
+                    >
+                      Up to {g.maxMult}
+                    </div>
+                  </div>
+                  <BentoArtwork
+                    id={g.id}
+                    className="h-14 w-14 sm:h-16 sm:w-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1020,6 +1104,9 @@ export default function App() {
           onUserUpdated={setUser}
           onToast={pushToast}
           onOpenUserModal={() => openAuthModal('login')}
+          activeGame={activeOriginalGame}
+          onGameChange={setActiveOriginalGame}
+          theme={theme}
         />
       )}
 
@@ -1034,6 +1121,23 @@ export default function App() {
           currentUserId={user?.id}
         />
       )}
+
+      <MobileTabBar
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0 });
+        }}
+        onOpenCasino={() => openOriginalGame('lobby')}
+        onOpenWallet={() => {
+          if (!user) {
+            openAuthModal('signup');
+            return;
+          }
+          setCashierTab('deposit');
+          setCashierOpen(true);
+        }}
+      />
 
       <AuthModal
         isOpen={authModalOpen}

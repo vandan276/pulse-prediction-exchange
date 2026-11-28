@@ -21,11 +21,11 @@ import {
 } from '../types';
 
 const MARKETS_DEF = [
-  { symbol: 'BTC/USDT', name: 'Bitcoin', shortName: 'BTC', category: 'crypto' as const, binanceSymbol: 'btcusdt', basePrice: 94820.5, decimals: 2, volatility: 0.00045, unit: 'USDT', accent: '#F7931A' },
-  { symbol: 'ETH/USDT', name: 'Ethereum', shortName: 'ETH', category: 'crypto' as const, binanceSymbol: 'ethusdt', basePrice: 3345.2, decimals: 2, volatility: 0.0006, unit: 'USDT', accent: '#627EEA' },
-  { symbol: 'SOL/USDT', name: 'Solana', shortName: 'SOL', category: 'crypto' as const, binanceSymbol: 'solusdt', basePrice: 218.75, decimals: 2, volatility: 0.00085, unit: 'USDT', accent: '#14F195' },
-  { symbol: 'BNB/USDT', name: 'BNB', shortName: 'BNB', category: 'crypto' as const, binanceSymbol: 'bnbusdt', basePrice: 648.4, decimals: 2, volatility: 0.0005, unit: 'USDT', accent: '#F3BA2F' },
-  { symbol: 'XRP/USDT', name: 'Ripple', shortName: 'XRP', category: 'crypto' as const, binanceSymbol: 'xrpusdt', basePrice: 1.4285, decimals: 4, volatility: 0.00095, unit: 'USDT', accent: '#38BDF8' },
+  { symbol: 'BTC/USDT', name: 'Bitcoin', shortName: 'BTC', category: 'crypto' as const, binanceSymbol: 'btcusdt', basePrice: 60000.0, decimals: 2, volatility: 0.00045, unit: 'USDT', accent: '#F7931A' },
+  { symbol: 'ETH/USDT', name: 'Ethereum', shortName: 'ETH', category: 'crypto' as const, binanceSymbol: 'ethusdt', basePrice: 1680.0, decimals: 2, volatility: 0.0006, unit: 'USDT', accent: '#627EEA' },
+  { symbol: 'SOL/USDT', name: 'Solana', shortName: 'SOL', category: 'crypto' as const, binanceSymbol: 'solusdt', basePrice: 72.0, decimals: 2, volatility: 0.00085, unit: 'USDT', accent: '#14F195' },
+  { symbol: 'BNB/USDT', name: 'BNB', shortName: 'BNB', category: 'crypto' as const, binanceSymbol: 'bnbusdt', basePrice: 555.0, decimals: 2, volatility: 0.0005, unit: 'USDT', accent: '#F3BA2F' },
+  { symbol: 'XRP/USDT', name: 'Ripple', shortName: 'XRP', category: 'crypto' as const, binanceSymbol: 'xrpusdt', basePrice: 0.95, decimals: 4, volatility: 0.00095, unit: 'USDT', accent: '#38BDF8' },
   { symbol: 'XAU/USD', name: 'Gold Spot', shortName: 'GOLD', category: 'commodity' as const, binanceSymbol: null, basePrice: 2684.5, decimals: 2, volatility: 0.00024, unit: 'USD / oz', accent: '#F5B731' },
   { symbol: 'XAG/USD', name: 'Silver Spot', shortName: 'SILVER', category: 'commodity' as const, binanceSymbol: null, basePrice: 31.485, decimals: 3, volatility: 0.00042, unit: 'USD / oz', accent: '#CBD5E1' },
   { symbol: 'WTI/USD', name: 'Crude Oil WTI', shortName: 'WTI', category: 'commodity' as const, binanceSymbol: null, basePrice: 71.85, decimals: 2, volatility: 0.00048, unit: 'USD / bbl', accent: '#A855F7' },

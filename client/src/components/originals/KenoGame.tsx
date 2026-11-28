@@ -101,13 +101,13 @@ export const KenoGame: React.FC<KenoGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
-            <Grid className="h-4 w-4 text-[#00E599]" />
+          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-fg">
+            <Grid className="h-4 w-4 text-accent" />
             KENO
           </span>
-          <span className="font-mono text-[11px] text-zinc-500">
+          <span className="font-mono text-[11px] text-subtle">
             {picks.length}/10 PICKED
           </span>
         </div>
@@ -119,7 +119,7 @@ export const KenoGame: React.FC<KenoGameProps> = ({
         />
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-semibold text-zinc-400">
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted">
             Risk Profile
           </label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -129,8 +129,8 @@ export const KenoGame: React.FC<KenoGameProps> = ({
                 onClick={() => setRisk(r)}
                 className={`rounded-xl border py-2 text-xs font-bold capitalize transition ${
                   risk === r
-                    ? 'border-[#00E599]/60 bg-[#00E599]/15 text-[#00E599]'
-                    : 'border-white/[0.06] bg-[#05070A] text-zinc-400 hover:text-white'
+                    ? 'border-accent/60 bg-accent/15 text-accent'
+                    : 'border-fg/[0.06] bg-raised text-muted hover:text-fg'
                 }`}
               >
                 {r}
@@ -143,9 +143,9 @@ export const KenoGame: React.FC<KenoGameProps> = ({
           <button
             type="button"
             onClick={autoPick}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] py-2 text-xs font-bold text-zinc-200 hover:bg-white/[0.08]"
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-fg/10 bg-fg/[0.04] py-2 text-xs font-bold text-fg hover:bg-fg/[0.08]"
           >
-            <Shuffle className="h-3.5 w-3.5 text-[#00E599]" />
+            <Shuffle className="h-3.5 w-3.5 text-accent" />
             Auto Pick
           </button>
           <button
@@ -155,7 +155,7 @@ export const KenoGame: React.FC<KenoGameProps> = ({
               setDrawn([]);
               setLastHits(null);
             }}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] py-2 text-xs font-bold text-zinc-400 hover:text-white"
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-fg/10 bg-fg/[0.04] py-2 text-xs font-bold text-muted hover:text-fg"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Clear
@@ -165,14 +165,14 @@ export const KenoGame: React.FC<KenoGameProps> = ({
         <button
           disabled={busy || picks.length === 0}
           onClick={playKeno}
-          className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_26px_rgba(0,229,153,0.38)] transition hover:brightness-110 disabled:opacity-40"
+          className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_26px_rgba(0,200,83,0.38)] transition hover:brightness-110 disabled:opacity-40"
         >
           DRAW 10 NUMBERS
         </button>
       </div>
 
       {/* Right 40-Tile Obsidian Grid + Multiplier Strip */}
-      <div className="surface-card order-1 lg:order-2 flex flex-col justify-between rounded-2xl p-4 sm:p-5 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex flex-col justify-between rounded-xl p-4 sm:p-5 lg:col-span-8">
         <div className="grid grid-cols-8 gap-2">
           {Array.from({ length: 40 }, (_, i) => i + 1).map((n) => {
             const picked = picks.includes(n);
@@ -186,17 +186,17 @@ export const KenoGame: React.FC<KenoGameProps> = ({
                 onClick={() => toggleTile(n)}
                 className={`relative aspect-square rounded-xl border font-mono text-sm font-extrabold transition-all flex items-center justify-center ${
                   hit
-                    ? 'border-[#00E599] bg-[#00E599]/25 text-[#00E599] shadow-[0_0_20px_rgba(0,229,153,0.45)] scale-105'
+                    ? 'border-accent bg-accent/25 text-accent shadow-[0_0_20px_rgba(0,200,83,0.45)] scale-105'
                     : picked
-                    ? 'border-[#F5B731] bg-[#F5B731]/20 text-[#F5B731]'
+                    ? 'border-gold bg-gold/20 text-gold'
                     : missDraw
-                    ? 'border-[#FF3B69]/45 bg-[#FF3B69]/12 text-[#FF3B69]'
-                    : 'border-white/[0.07] bg-[#0C1018] text-zinc-300 hover:border-white/25 hover:text-white'
+                    ? 'border-danger/45 bg-danger/12 text-danger'
+                    : 'border-fg/[0.07] bg-surface text-fg2 hover:border-fg/25 hover:text-fg'
                 }`}
               >
                 {hit ? (
                   <div className="flex flex-col items-center">
-                    <Diamond className="h-3.5 w-3.5 text-[#00E599]" />
+                    <Diamond className="h-3.5 w-3.5 text-accent" />
                     <span className="text-[11px] leading-none mt-0.5">{n}</span>
                   </div>
                 ) : (
@@ -218,15 +218,15 @@ export const KenoGame: React.FC<KenoGameProps> = ({
                   className={`rounded-lg border py-1.5 text-center transition ${
                     active
                       ? mult > 0
-                        ? 'border-[#00E599] bg-[#00E599] text-[#040507]'
-                        : 'border-[#FF3B69] bg-[#FF3B69]/25 text-white'
-                      : 'border-white/[0.06] bg-[#05070A] text-zinc-300'
+                        ? 'border-accent bg-accent text-onaccent'
+                        : 'border-danger bg-danger/25 text-fg'
+                      : 'border-fg/[0.06] bg-raised text-fg2'
                   }`}
                 >
                   <div className="font-mono text-[11px] font-extrabold tabular-nums">
                     {mult}x
                   </div>
-                  <div className={`text-[9px] font-mono ${active ? 'opacity-80' : 'text-zinc-500'}`}>
+                  <div className={`text-[9px] font-mono ${active ? 'opacity-80' : 'text-subtle'}`}>
                     {hitIdx}×
                   </div>
                 </div>

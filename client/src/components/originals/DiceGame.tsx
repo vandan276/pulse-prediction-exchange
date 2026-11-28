@@ -66,13 +66,13 @@ export const DiceGame: React.FC<DiceGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
-            <Dices className="h-4 w-4 text-[#00E599]" />
+          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-fg">
+            <Dices className="h-4 w-4 text-accent" />
             DICE
           </span>
-          <span className="font-mono text-[11px] text-zinc-500">99% RTP</span>
+          <span className="font-mono text-[11px] text-subtle">99% RTP</span>
         </div>
 
         <StakeInput
@@ -81,16 +81,16 @@ export const DiceGame: React.FC<DiceGameProps> = ({
           balanceCents={user?.balanceCents ?? 0}
         />
 
-        <div className="rounded-xl border border-white/[0.06] bg-[#05070A] p-3 text-xs space-y-1.5">
+        <div className="rounded-xl border border-fg/[0.06] bg-raised p-3 text-xs space-y-1.5">
           <div className="flex justify-between">
-            <span className="text-zinc-400">Profit on Win</span>
-            <span className="font-mono font-bold text-[#00E599] tabular-nums">
+            <span className="text-muted">Profit on Win</span>
+            <span className="font-mono font-bold text-accent tabular-nums">
               +{formatUsd(profitCents)}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-zinc-400">Payout Multiplier</span>
-            <span className="font-mono font-bold text-white tabular-nums">
+            <span className="text-muted">Payout Multiplier</span>
+            <span className="font-mono font-bold text-fg tabular-nums">
               {multiplier.toFixed(4)}x
             </span>
           </div>
@@ -99,18 +99,18 @@ export const DiceGame: React.FC<DiceGameProps> = ({
         <button
           disabled={rolling}
           onClick={rollDice}
-          className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_26px_rgba(0,229,153,0.38)] transition hover:brightness-110 active:scale-[0.98]"
+          className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_26px_rgba(0,200,83,0.38)] transition hover:brightness-110 active:scale-[0.98]"
         >
           ROLL DICE
         </button>
       </div>
 
       {/* Right Interactive Neon Slider Stage */}
-      <div className="surface-card order-1 lg:order-2 flex flex-col justify-between rounded-2xl p-4 sm:p-6 lg:col-span-8 min-h-[300px] sm:min-h-[380px]">
+      <div className="surface-card order-1 lg:order-2 flex flex-col justify-between rounded-xl p-4 sm:p-6 lg:col-span-8 min-h-[300px] sm:min-h-[380px]">
         {/* Recent Rolls */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           {history.length === 0 ? (
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-subtle">
               Roll to see provably-fair results (0.00 – 100.00)
             </span>
           ) : (
@@ -119,8 +119,8 @@ export const DiceGame: React.FC<DiceGameProps> = ({
                 key={i}
                 className={`shrink-0 rounded-full px-2.5 py-0.5 font-mono text-xs font-bold tabular-nums ${
                   h.won
-                    ? 'bg-[#00E599]/20 text-[#00E599]'
-                    : 'bg-[#FF3B69]/20 text-[#FF3B69]'
+                    ? 'bg-accent/20 text-accent'
+                    : 'bg-danger/20 text-danger'
                 }`}
               >
                 {h.roll.toFixed(2)}
@@ -140,8 +140,8 @@ export const DiceGame: React.FC<DiceGameProps> = ({
                 <div
                   className={`rounded-xl border px-3 py-1.5 font-mono text-base font-black shadow-2xl tabular-nums ${
                     lastRoll.won
-                      ? 'border-[#00E599] bg-[#00E599] text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.5)]'
-                      : 'border-[#FF3B69] bg-[#FF3B69] text-white shadow-[0_0_24px_rgba(255,59,105,0.5)]'
+                      ? 'border-accent bg-accent text-onaccent shadow-[0_0_24px_rgba(0,200,83,0.5)]'
+                      : 'border-danger bg-danger text-white shadow-[0_0_24px_rgba(255,78,78,0.5)]'
                   }`}
                 >
                   {lastRoll.roll.toFixed(2)}
@@ -150,20 +150,20 @@ export const DiceGame: React.FC<DiceGameProps> = ({
             )}
           </div>
 
-          <div className="relative flex h-12 items-center rounded-2xl border border-white/[0.08] bg-[#05070A] px-4">
-            <div className="relative h-3 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="relative flex h-12 items-center rounded-xl border border-fg/[0.08] bg-raised px-4">
+            <div className="relative h-3 w-full overflow-hidden rounded-full bg-fg/10">
               <div
                 className="absolute inset-y-0 left-0 transition-all"
                 style={{
                   width: `${target}%`,
-                  backgroundColor: condition === 'under' ? '#00E599' : '#FF3B69',
+                  backgroundColor: condition === 'under' ? '#00C853' : '#FF4E4E',
                 }}
               />
               <div
                 className="absolute inset-y-0 right-0 transition-all"
                 style={{
                   width: `${100 - target}%`,
-                  backgroundColor: condition === 'over' ? '#00E599' : '#FF3B69',
+                  backgroundColor: condition === 'over' ? '#00C853' : '#FF4E4E',
                 }}
               />
             </div>
@@ -178,14 +178,14 @@ export const DiceGame: React.FC<DiceGameProps> = ({
             />
             {/* Visual thumb */}
             <div
-              className="pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg border-2 border-white bg-[#10141D] shadow-lg"
+              className="pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg border-2 border-fg bg-surface shadow-lg"
               style={{ left: `calc(16px + (100% - 32px) * ${target / 100})` }}
             >
-              <span className="h-3 w-0.5 bg-white/70 rounded-full" />
+              <span className="h-3 w-0.5 bg-fg/70 rounded-full" />
             </div>
           </div>
 
-          <div className="mt-2 flex justify-between font-mono text-[10px] text-zinc-500 px-1">
+          <div className="mt-2 flex justify-between font-mono text-[10px] text-subtle px-1">
             <span>0</span>
             <span>25</span>
             <span>50</span>
@@ -196,11 +196,11 @@ export const DiceGame: React.FC<DiceGameProps> = ({
 
         {/* Bottom 3 Metrics Bar */}
         <div className="grid grid-cols-3 gap-2.5">
-          <div className="rounded-xl border border-white/[0.07] bg-[#05070A] p-3">
-            <div className="text-[10px] font-semibold uppercase text-zinc-500">
+          <div className="rounded-xl border border-fg/[0.07] bg-raised p-3">
+            <div className="text-[10px] font-semibold uppercase text-subtle">
               Multiplier
             </div>
-            <div className="mt-1 font-mono text-base font-extrabold text-white tabular-nums">
+            <div className="mt-1 font-mono text-base font-extrabold text-fg tabular-nums">
               {multiplier.toFixed(4)}x
             </div>
           </div>
@@ -208,22 +208,22 @@ export const DiceGame: React.FC<DiceGameProps> = ({
           <button
             type="button"
             onClick={() => setCondition((c) => (c === 'over' ? 'under' : 'over'))}
-            className="rounded-xl border border-white/[0.07] bg-[#05070A] p-3 text-left transition hover:border-[#00E599]/40"
+            className="rounded-xl border border-fg/[0.07] bg-raised p-3 text-left transition hover:border-accent/40"
           >
-            <div className="flex items-center justify-between text-[10px] font-semibold uppercase text-zinc-500">
+            <div className="flex items-center justify-between text-[10px] font-semibold uppercase text-subtle">
               <span>Roll {condition}</span>
-              <ArrowLeftRight className="h-3.5 w-3.5 text-[#00E599]" />
+              <ArrowLeftRight className="h-3.5 w-3.5 text-accent" />
             </div>
-            <div className="mt-1 font-mono text-base font-extrabold text-[#00E599] tabular-nums">
+            <div className="mt-1 font-mono text-base font-extrabold text-accent tabular-nums">
               {target.toFixed(2)}
             </div>
           </button>
 
-          <div className="rounded-xl border border-white/[0.07] bg-[#05070A] p-3">
-            <div className="text-[10px] font-semibold uppercase text-zinc-500">
+          <div className="rounded-xl border border-fg/[0.07] bg-raised p-3">
+            <div className="text-[10px] font-semibold uppercase text-subtle">
               Win Chance
             </div>
-            <div className="mt-1 font-mono text-base font-extrabold text-white tabular-nums">
+            <div className="mt-1 font-mono text-base font-extrabold text-fg tabular-nums">
               {winChance.toFixed(2)}%
             </div>
           </div>

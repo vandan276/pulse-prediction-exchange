@@ -80,23 +80,23 @@ export const LiveWinsTicker: React.FC<LiveWinsTickerProps> = ({
             <Flame
               className={`h-3 w-3 shrink-0 ${
                 item.tone === 'gold'
-                  ? 'text-[#F5B731]'
+                  ? 'text-gold'
                   : item.tone === 'purple'
-                  ? 'text-purple-400'
-                  : 'text-[#00E599]'
+                  ? 'text-gold'
+                  : 'text-accent'
               }`}
             />
-            <span className="rounded bg-white/[0.08] px-1.5 py-0.2 font-mono text-[9px] font-bold tracking-wide text-zinc-300">
+            <span className="rounded bg-fg/[0.08] px-1.5 py-0.2 font-mono text-[9px] font-bold tracking-wide text-fg2">
               {item.badge}
             </span>
-            <span className="font-medium text-zinc-300">{item.text}</span>
+            <span className="font-medium text-fg2">{item.text}</span>
             <span
               className={`font-mono font-extrabold tabular-nums ${
                 item.tone === 'gold'
-                  ? 'text-[#F5B731]'
+                  ? 'text-gold'
                   : item.tone === 'purple'
-                  ? 'text-[#00E599]'
-                  : 'text-[#00E599]'
+                  ? 'text-accent'
+                  : 'text-accent'
               }`}
             >
               {item.highlight}

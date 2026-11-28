@@ -96,14 +96,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
     const isLight = theme === 'light';
 
-    // Theme-aware chart canvas backdrop
+    // Theme-aware Apex Pro Fintech chart canvas backdrop
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
     if (isLight) {
       bgGrad.addColorStop(0, '#FFFFFF');
-      bgGrad.addColorStop(1, '#F8FAFC');
+      bgGrad.addColorStop(1, '#FFFFFF');
     } else {
-      bgGrad.addColorStop(0, '#07090D');
-      bgGrad.addColorStop(1, '#040507');
+      bgGrad.addColorStop(0, '#12151C');
+      bgGrad.addColorStop(1, '#0E1117');
     }
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
@@ -142,7 +142,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
     // Subtle horizontal price grid + axis
     const gridSteps = 5;
-    ctx.font = '500 10px "IBM Plex Mono", monospace';
+    ctx.font = '500 10px "JetBrains Mono", monospace';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
 
@@ -150,36 +150,36 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       const y = padTop + (i / gridSteps) * priceChartH;
       const val = maxP - (i / gridSteps) * range;
       ctx.strokeStyle = isLight
-        ? 'rgba(15, 23, 42, 0.065)'
-        : 'rgba(255, 255, 255, 0.045)';
+        ? 'rgba(15, 23, 42, 0.06)'
+        : 'rgba(255, 255, 255, 0.05)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(padLeft, y);
       ctx.lineTo(padLeft + chartW, y);
       ctx.stroke();
 
-      ctx.fillStyle = isLight ? '#64748B' : 'rgba(161, 161, 170, 0.65)';
+      ctx.fillStyle = isLight ? '#64748B' : 'rgba(148, 163, 184, 0.72)';
       ctx.fillText(formatPrice(val, decimals), padLeft + chartW + 10, y);
     }
 
     // Strike / Lock Price zone wash + Golden Laser Beam
     const isUpWinning = lockPrice != null ? currentPrice >= lockPrice : true;
-    const bullColor = isLight ? '#059669' : '#00E599';
-    const bearColor = isLight ? '#E11D48' : '#FF3B69';
+    const bullColor = isLight ? '#00C853' : '#00D660';
+    const bearColor = isLight ? '#FF3B5C' : '#FF4766';
     const activeColor = isUpWinning ? bullColor : bearColor;
 
     if (lockPrice != null) {
       const lockY = Math.max(padTop, Math.min(padTop + priceChartH, yOf(lockPrice)));
 
       const upWash = ctx.createLinearGradient(0, padTop, 0, lockY);
-      upWash.addColorStop(0, isLight ? 'rgba(5, 150, 105, 0.08)' : 'rgba(0, 229, 153, 0.055)');
-      upWash.addColorStop(1, 'rgba(5, 150, 105, 0.008)');
+      upWash.addColorStop(0, isLight ? 'rgba(0,200,83, 0.06)' : 'rgba(0, 214, 96, 0.06)');
+      upWash.addColorStop(1, 'rgba(0,200,83, 0.005)');
       ctx.fillStyle = upWash;
       ctx.fillRect(padLeft, padTop, chartW, Math.max(0, lockY - padTop));
 
       const dnWash = ctx.createLinearGradient(0, lockY, 0, padTop + priceChartH);
-      dnWash.addColorStop(0, 'rgba(225, 29, 72, 0.008)');
-      dnWash.addColorStop(1, isLight ? 'rgba(225, 29, 72, 0.075)' : 'rgba(255, 59, 105, 0.055)');
+      dnWash.addColorStop(0, 'rgba(255, 59, 92, 0.005)');
+      dnWash.addColorStop(1, isLight ? 'rgba(255, 59, 92, 0.06)' : 'rgba(255, 71, 102, 0.06)');
       ctx.fillStyle = dnWash;
       ctx.fillRect(
         padLeft,
@@ -188,10 +188,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         Math.max(0, padTop + priceChartH - lockY)
       );
 
-      // Golden Laser Strike Line
+      // Strike Line
       ctx.save();
       ctx.setLineDash([5, 4]);
-      ctx.strokeStyle = isLight ? 'rgba(217, 119, 6, 0.85)' : 'rgba(245, 183, 49, 0.9)';
+      ctx.strokeStyle = isLight ? 'rgba(217, 119, 6, 0.78)' : 'rgba(245, 158, 11, 0.85)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(padLeft, lockY);
@@ -199,15 +199,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       ctx.stroke();
       ctx.restore();
 
-      // Strike pill on left (opaque fill so dashed laser never bleeds through text)
+      // Strike pill on left
       const strikeTxt = `STRIKE ${formatPrice(lockPrice, decimals)}`;
-      ctx.font = '700 10px "IBM Plex Mono", monospace';
+      ctx.font = '700 10px "JetBrains Mono", monospace';
       const sw = ctx.measureText(strikeTxt).width + 14;
-      ctx.fillStyle = isLight ? '#FFFBEB' : '#181205';
-      ctx.strokeStyle = isLight ? '#D97706' : 'rgba(245, 183, 49, 0.8)';
+      ctx.fillStyle = isLight ? '#FFFBEB' : '#261C0A';
+      ctx.strokeStyle = isLight ? '#D97706' : 'rgba(245, 158, 11, 0.8)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.roundRect(padLeft + 4, lockY - 10, sw, 20, 5);
+      ctx.roundRect(padLeft + 4, lockY - 10, sw, 20, 6);
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = isLight ? '#B45309' : '#FCD34D';
@@ -225,8 +225,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         const bullish = c.close >= c.open;
         const barH = (c.volume / maxVol) * (volH - 6);
         ctx.fillStyle = bullish
-          ? 'rgba(0, 229, 153, 0.16)'
-          : 'rgba(255, 59, 105, 0.16)';
+          ? 'rgba(0,200,83, 0.14)'
+          : 'rgba(255, 59, 92, 0.14)';
         ctx.fillRect(
           cx - bodyW / 2,
           padTop + chartH - barH,
@@ -235,12 +235,17 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         );
       });
 
-      // Draw crisp Japanese Candlesticks
+      // Draw crisp Polymarket/Fintech Japanese Candlesticks
       displayCandles.forEach((c, idx) => {
         const cx = xOfIndex(idx);
         const isLast = idx === displayCandles.length - 1;
         const bullish = c.close >= c.open;
-        const color = bullish ? '#00E599' : '#FF3B69';
+        const color = bullish ? bullColor : bearColor;
+        const fillCol = isLight
+          ? bullish
+            ? '#86EFAC'
+            : '#FDA4AF'
+          : color;
 
         const yHigh = yOf(c.high);
         const yLow = yOf(c.low);
@@ -259,22 +264,22 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         const bodyTop = Math.min(yOpen, yClose);
         const bodyHeight = Math.max(2, Math.abs(yClose - yOpen));
 
+        ctx.fillStyle = fillCol;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = isLight ? 1 : 0;
+        ctx.beginPath();
+        ctx.roundRect(cx - bodyW / 2, bodyTop, bodyW, bodyHeight, 2);
+        ctx.fill();
+        if (isLight) ctx.stroke();
         if (isLast) {
           ctx.save();
-          ctx.shadowColor = bullish
-            ? 'rgba(0, 229, 153, 0.55)'
-            : 'rgba(255, 59, 105, 0.55)';
-          ctx.shadowBlur = 12;
+          ctx.shadowColor = bullish ? 'rgba(0,200,83, 0.35)' : 'rgba(255, 59, 92, 0.35)';
+          ctx.shadowBlur = 8;
           ctx.fillStyle = color;
           ctx.beginPath();
-          ctx.roundRect(cx - bodyW / 2, bodyTop, bodyW, bodyHeight, 1.5);
+          ctx.roundRect(cx - bodyW / 2, bodyTop, bodyW, bodyHeight, 2);
           ctx.fill();
           ctx.restore();
-        } else {
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.roundRect(cx - bodyW / 2, bodyTop, bodyW, bodyHeight, 1.5);
-          ctx.fill();
         }
       });
     } else {
@@ -294,7 +299,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       const areaGrad = ctx.createLinearGradient(0, padTop, 0, padTop + priceChartH);
       areaGrad.addColorStop(
         0,
-        isUpWinning ? 'rgba(0, 229, 153, 0.28)' : 'rgba(255, 59, 105, 0.28)'
+        isUpWinning ? 'rgba(0,200,83, 0.28)' : 'rgba(255, 78, 78, 0.28)'
       );
       areaGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = areaGrad;
@@ -309,8 +314,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       });
       ctx.save();
       ctx.shadowColor = isUpWinning
-        ? 'rgba(0, 229, 153, 0.5)'
-        : 'rgba(255, 59, 105, 0.5)';
+        ? 'rgba(0,200,83, 0.5)'
+        : 'rgba(255, 78, 78, 0.5)';
       ctx.shadowBlur = 10;
       ctx.strokeStyle = activeColor;
       ctx.lineWidth = 2.2;
@@ -327,8 +332,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     ctx.save();
     ctx.setLineDash([2, 3]);
     ctx.strokeStyle = isUpWinning
-      ? 'rgba(0, 229, 153, 0.55)'
-      : 'rgba(255, 59, 105, 0.55)';
+      ? 'rgba(0,200,83, 0.55)'
+      : 'rgba(255, 78, 78, 0.55)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(padLeft, liveY);
@@ -340,8 +345,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     ctx.beginPath();
     ctx.arc(lastX, liveY, 7, 0, Math.PI * 2);
     ctx.fillStyle = isUpWinning
-      ? 'rgba(0, 229, 153, 0.24)'
-      : 'rgba(255, 59, 105, 0.24)';
+      ? 'rgba(0,200,83, 0.24)'
+      : 'rgba(255, 78, 78, 0.24)';
     ctx.fill();
 
     ctx.beginPath();
@@ -354,15 +359,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     ctx.beginPath();
     ctx.roundRect(padLeft + chartW + 5, liveY - 10, padRight - 10, 20, 4);
     ctx.fill();
-    ctx.fillStyle = isLight ? '#FFFFFF' : '#040507';
-    ctx.font = '700 10px "IBM Plex Mono", monospace';
+    ctx.fillStyle = isLight ? '#FFFFFF' : '#0A0B0E';
+    ctx.font = '700 10px "JetBrains Mono", monospace';
     ctx.textAlign = 'left';
     ctx.fillText(formatPrice(currentPrice, decimals), padLeft + chartW + 10, liveY);
 
     // X-axis timestamps (clamped cleanly so edges never clip!)
-    ctx.fillStyle = isLight ? '#64748B' : 'rgba(161, 161, 170, 0.55)';
-    ctx.font = '500 10px "IBM Plex Mono", monospace';
-    const timeTicks = 5;
+    ctx.fillStyle = isLight ? '#64748B' : 'rgba(177, 186, 211, 0.55)';
+    ctx.font = '500 10px "JetBrains Mono", monospace';
+    const timeTicks = chartW < 360 ? 2 : chartW < 560 ? 3 : 5;
     for (let i = 0; i <= timeTicks; i++) {
       const idx = Math.floor((i / timeTicks) * (itemCount - 1));
       const ts =
@@ -459,11 +464,11 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const ringOffset = ringC * (1 - elapsedPct / 100);
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#05070A]">
+    <div className="relative overflow-hidden rounded-xl border border-fg/[0.06] bg-raised">
       {/* Floating Glassmorphic Live Candle HUD */}
       {liveRound && (
         <div className="pointer-events-none absolute left-3 right-3 top-2.5 z-10 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.09] bg-[#090B0F]/85 px-3 py-1.5 backdrop-blur-xl shadow-lg">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-fg/[0.09] bg-surface/85 px-3 py-1.5 backdrop-blur-xl shadow-lg">
             {/* Radial Countdown Ring */}
             <div className="relative flex h-8 w-8 items-center justify-center">
               <svg className="h-8 w-8 -rotate-90" viewBox="0 0 32 32">
@@ -480,22 +485,22 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                   cy="16"
                   r={ringR}
                   fill="none"
-                  stroke={inAntiSnipeZone ? '#F5B731' : '#00E599'}
+                  stroke={inAntiSnipeZone ? '#FFC800' : '#00C853'}
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeDasharray={ringC}
                   strokeDashoffset={ringOffset}
                 />
               </svg>
-              <Lock className="absolute h-3 w-3 text-zinc-200" />
+              <Lock className="absolute h-3 w-3 text-fg" />
             </div>
 
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[11px] font-bold text-white">
+                <span className="font-mono text-[11px] font-bold text-fg">
                   LIVE #{liveRound.roundNumber}
                 </span>
-                <span className="rounded bg-white/[0.08] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-zinc-300">
+                <span className="rounded bg-fg/[0.08] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-fg2">
                   LOCKED IN PLAY
                 </span>
                 {myLiveBet && (
@@ -503,69 +508,69 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                     className={`rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase ${
                       (myLiveBet.direction === 'UP' && diff > 0) ||
                       (myLiveBet.direction === 'DOWN' && diff < 0)
-                        ? 'bg-[#00E599]/20 text-[#00E599]'
-                        : 'bg-[#F5B731]/20 text-[#F5B731]'
+                        ? 'bg-accent/20 text-accent'
+                        : 'bg-gold/20 text-gold'
                     }`}
                   >
                     YOU: {myLiveBet.direction}
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400 tabular-nums">
+              <div className="flex items-center gap-2 text-[10px] font-mono text-muted tabular-nums">
                 <span>
-                  Settles <strong className="text-white">{formatCountdown(remainingMs)}</strong>
+                  Settles <strong className="text-fg">{formatCountdown(remainingMs)}</strong>
                 </span>
                 <span>·</span>
-                <span className="flex items-center gap-0.5 text-zinc-300">
-                  <Users className="h-2.5 w-2.5 text-[#00E599]" />
+                <span className="flex items-center gap-0.5 text-fg2">
+                  <Users className="h-2.5 w-2.5 text-accent" />
                   {liveRound.playerCount} playing
                 </span>
               </div>
             </div>
 
-            <div className="hidden sm:block h-6 w-px bg-white/10 mx-0.5" />
+            <div className="hidden sm:block h-6 w-px bg-fg/10 mx-0.5" />
 
             <div className="hidden sm:flex items-center gap-1 font-mono text-xs font-bold tabular-nums">
               {diff > 0 ? (
-                <span className="flex items-center gap-0.5 text-[#00E599]">
+                <span className="flex items-center gap-0.5 text-accent">
                   <ArrowUpRight className="h-3.5 w-3.5" />+{diffPct.toFixed(3)}% UP
                 </span>
               ) : diff < 0 ? (
-                <span className="flex items-center gap-0.5 text-[#FF3B69]">
+                <span className="flex items-center gap-0.5 text-danger">
                   <ArrowDownRight className="h-3.5 w-3.5" />
                   {diffPct.toFixed(3)}% DN
                 </span>
               ) : (
-                <span className="text-zinc-400">0.000% EVEN</span>
+                <span className="text-muted">0.000% EVEN</span>
               )}
             </div>
           </div>
 
           {/* OHLC / Hover readout OR Anti-Snipe live badge */}
           {hoveredCandle ? (
-            <div className="hidden md:flex items-center gap-3 rounded-xl border border-white/10 bg-[#090B0F]/90 px-3 py-1.5 font-mono text-[10px] backdrop-blur-xl tabular-nums">
-              <span className="text-zinc-400">{formatTimeShort(hoveredCandle.time)}</span>
-              <span className="text-zinc-400">
-                O <strong className="text-white">{formatPrice(hoveredCandle.open, decimals)}</strong>
+            <div className="hidden md:flex items-center gap-3 rounded-xl border border-fg/10 bg-surface/90 px-3 py-1.5 font-mono text-[10px] backdrop-blur-xl tabular-nums">
+              <span className="text-muted">{formatTimeShort(hoveredCandle.time)}</span>
+              <span className="text-muted">
+                O <strong className="text-fg">{formatPrice(hoveredCandle.open, decimals)}</strong>
               </span>
-              <span className="text-zinc-400">
-                H <strong className="text-[#00E599]">{formatPrice(hoveredCandle.high, decimals)}</strong>
+              <span className="text-muted">
+                H <strong className="text-accent">{formatPrice(hoveredCandle.high, decimals)}</strong>
               </span>
-              <span className="text-zinc-400">
-                L <strong className="text-[#FF3B69]">{formatPrice(hoveredCandle.low, decimals)}</strong>
+              <span className="text-muted">
+                L <strong className="text-danger">{formatPrice(hoveredCandle.low, decimals)}</strong>
               </span>
-              <span className="text-zinc-400">
-                C <strong className="text-white">{formatPrice(hoveredCandle.close, decimals)}</strong>
+              <span className="text-muted">
+                C <strong className="text-fg">{formatPrice(hoveredCandle.close, decimals)}</strong>
               </span>
             </div>
           ) : hoveredPoint ? (
-            <div className="hidden md:flex items-center gap-2 rounded-xl border border-white/10 bg-[#090B0F]/90 px-3 py-1.5 font-mono text-[11px] backdrop-blur-xl tabular-nums">
-              <span className="text-zinc-400">{symbol}</span>
-              <strong className="text-white">${formatPrice(hoveredPoint.price, decimals)}</strong>
-              <span className="text-zinc-500">{formatTimeShort(hoveredPoint.time)}</span>
+            <div className="hidden md:flex items-center gap-2 rounded-xl border border-fg/10 bg-surface/90 px-3 py-1.5 font-mono text-[11px] backdrop-blur-xl tabular-nums">
+              <span className="text-muted">{symbol}</span>
+              <strong className="text-fg">${formatPrice(hoveredPoint.price, decimals)}</strong>
+              <span className="text-subtle">{formatTimeShort(hoveredPoint.time)}</span>
             </div>
           ) : inAntiSnipeZone ? (
-            <div className="flex items-center gap-1.5 rounded-xl border border-[#F5B731]/40 bg-[#F5B731]/15 px-3 py-1.5 text-[11px] font-bold text-[#F5B731] backdrop-blur-xl">
+            <div className="flex items-center gap-1.5 rounded-xl border border-gold/40 bg-gold/15 px-3 py-1.5 text-[11px] font-bold text-gold backdrop-blur-xl">
               <ShieldAlert className="h-3.5 w-3.5" />
               ANTI-SNIPE SEALED • LOCKING NEXT CANDLE
             </div>
@@ -587,29 +592,29 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       </div>
 
       {/* Bottom Dual-Zone Progress Strip: Shows Open Entry Window vs Anti-Snipe Lock Zone */}
-      <div className="border-t border-white/[0.06] bg-[#07090E] px-3 py-2">
+      <div className="border-t border-fg/[0.06] bg-raised px-3 py-2">
         <div className="mb-1 flex items-center justify-between text-[10px] font-mono">
-          <span className="text-zinc-400">
+          <span className="text-muted">
             LIVE CANDLE TIMELINE
           </span>
-          <span className={inAntiSnipeZone ? 'text-[#F5B731] font-bold' : 'text-zinc-400'}>
+          <span className={inAntiSnipeZone ? 'text-gold font-bold' : 'text-muted'}>
             {inAntiSnipeZone
               ? `ANTI-SNIPE BUFFER ACTIVE (${Math.round((openRound?.entryCutoffMs ?? 15000) / 1000)}s pre-lock)`
               : `Next round cutoff ${Math.round((openRound?.entryCutoffMs ?? 15000) / 1000)}s before candle close`}
           </span>
         </div>
-        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/[0.07]">
+        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-fg/[0.07]">
           {/* Highlighted anti-snipe zone on right tail of candle */}
           <div
-            className="absolute right-0 top-0 bottom-0 bg-[#F5B731]/30 border-l border-[#F5B731]/80"
+            className="absolute right-0 top-0 bottom-0 bg-gold/30 border-l border-gold/80"
             style={{ width: `${cutoffPct}%` }}
           />
           {/* Live candle progress bar */}
           <div
             className={`relative h-full rounded-full transition-all duration-300 ${
               inAntiSnipeZone
-                ? 'bg-gradient-to-r from-[#00E599] via-[#F5B731] to-[#F5B731]'
-                : 'bg-gradient-to-r from-[#00E599]/80 to-[#00E599]'
+                ? 'bg-gradient-to-r from-accent via-gold to-gold'
+                : 'bg-gradient-to-r from-accent/80 to-accent'
             }`}
             style={{ width: `${elapsedPct}%` }}
           />

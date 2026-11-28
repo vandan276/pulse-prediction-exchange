@@ -27,15 +27,15 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
   const [expandedRoundId, setExpandedRoundId] = useState<string | null>(null);
 
   return (
-    <div className="surface-card rounded-2xl p-4">
+    <div className="surface-card rounded-xl p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1 rounded-xl border border-white/[0.06] bg-[#05070A] p-1">
+        <div className="flex items-center gap-1 rounded-xl border border-fg/[0.06] bg-raised p-1">
           <button
             onClick={() => setTab('rounds')}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
               tab === 'rounds'
-                ? 'bg-white text-[#040507]'
-                : 'text-zinc-400 hover:text-white'
+                ? 'bg-fg text-inverse'
+                : 'text-muted hover:text-fg'
             }`}
           >
             <History className="h-3.5 w-3.5" />
@@ -45,8 +45,8 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
             onClick={() => setTab('my_bets')}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
               tab === 'my_bets'
-                ? 'bg-white text-[#040507]'
-                : 'text-zinc-400 hover:text-white'
+                ? 'bg-fg text-inverse'
+                : 'text-muted hover:text-fg'
             }`}
           >
             <Receipt className="h-3.5 w-3.5" />
@@ -54,32 +54,32 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
           </button>
         </div>
 
-        <span className="hidden sm:inline text-[11px] text-zinc-500">
+        <span className="hidden sm:inline text-[11px] text-subtle">
           Expand any round to audit all players, equal payouts &amp; 10% vault TX
         </span>
       </div>
 
       {tab === 'rounds' ? (
         recentRounds.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-white/10 py-10 text-center text-xs text-zinc-500">
+          <div className="rounded-xl border border-dashed border-fg/10 py-10 text-center text-xs text-subtle">
             No settled rounds yet for this timeframe. Watch the live candle settle above.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-white/[0.06] text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                <tr className="border-b border-fg/[0.06] text-[10px] font-semibold uppercase tracking-wider text-subtle">
                   <th className="py-2 pr-3">Round</th>
                   <th className="py-2 px-2">Outcome</th>
                   <th className="py-2 px-2">Strike → Close</th>
                   <th className="py-2 px-2 text-right">Players</th>
                   <th className="py-2 px-2 text-right">Pool</th>
-                  <th className="py-2 px-2 text-right text-[#F5B731]">10% Vault</th>
-                  <th className="py-2 px-2 text-right text-[#00E599]">Equal / Winner</th>
+                  <th className="py-2 px-2 text-right text-gold">10% Vault</th>
+                  <th className="py-2 px-2 text-right text-accent">Equal / Winner</th>
                   <th className="py-2 pl-2 text-right" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.04]">
+              <tbody className="divide-y divide-fg/[0.04]">
                 {recentRounds.map((r) => {
                   const expanded = expandedRoundId === r.roundId;
                   return (
@@ -88,11 +88,11 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                         onClick={() =>
                           setExpandedRoundId(expanded ? null : r.roundId)
                         }
-                        className="cursor-pointer transition hover:bg-white/[0.025]"
+                        className="cursor-pointer transition hover:bg-fg/[0.025]"
                       >
-                        <td className="py-2.5 pr-3 font-mono font-bold text-white">
+                        <td className="py-2.5 pr-3 font-mono font-bold text-fg">
                           #{r.roundNumber}
-                          <div className="text-[10px] font-normal text-zinc-500">
+                          <div className="text-[10px] font-normal text-subtle">
                             {formatTimeShort(r.settledAt)}
                           </div>
                         </td>
@@ -100,10 +100,10 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                           <span
                             className={`inline-flex items-center gap-0.5 rounded-md px-2 py-0.5 font-mono text-[10px] font-bold ${
                               r.outcome === 'UP'
-                                ? 'bg-[#00E599]/15 text-[#00E599]'
+                                ? 'bg-accent/15 text-accent'
                                 : r.outcome === 'DOWN'
-                                ? 'bg-[#FF3B69]/15 text-[#FF3B69]'
-                                : 'bg-white/10 text-zinc-300'
+                                ? 'bg-danger/15 text-danger'
+                                : 'bg-fg/10 text-fg2'
                             }`}
                           >
                             {r.outcome === 'UP' && <ArrowUpRight className="h-3 w-3" />}
@@ -111,30 +111,30 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                             {r.outcome}
                           </span>
                         </td>
-                        <td className="py-2.5 px-2 font-mono text-[11px] text-zinc-400 tabular-nums">
+                        <td className="py-2.5 px-2 font-mono text-[11px] text-muted tabular-nums">
                           ${formatPrice(r.lockPrice, decimals)} →{' '}
-                          <strong className="text-white">
+                          <strong className="text-fg">
                             ${formatPrice(r.closePrice, decimals)}
                           </strong>
                         </td>
-                        <td className="py-2.5 px-2 text-right font-mono text-zinc-300 tabular-nums">
+                        <td className="py-2.5 px-2 text-right font-mono text-fg2 tabular-nums">
                           {r.playerCount}{' '}
-                          <span className="text-[10px] text-zinc-500">
+                          <span className="text-[10px] text-subtle">
                             ({r.winnerCount}W)
                           </span>
                         </td>
-                        <td className="py-2.5 px-2 text-right font-mono font-semibold text-white tabular-nums">
+                        <td className="py-2.5 px-2 text-right font-mono font-semibold text-fg tabular-nums">
                           {formatUsd(r.totalPoolCents)}
                         </td>
-                        <td className="py-2.5 px-2 text-right font-mono font-semibold text-[#F5B731] tabular-nums">
+                        <td className="py-2.5 px-2 text-right font-mono font-semibold text-gold tabular-nums">
                           {formatUsd(r.masterFeeCents)}
                         </td>
-                        <td className="py-2.5 px-2 text-right font-mono font-bold text-[#00E599] tabular-nums">
+                        <td className="py-2.5 px-2 text-right font-mono font-bold text-accent tabular-nums">
                           {r.winnerCount > 0
                             ? formatUsd(r.payoutPerWinnerCents)
                             : 'Refunded'}
                         </td>
-                        <td className="py-2.5 pl-2 text-right text-zinc-500">
+                        <td className="py-2.5 pl-2 text-right text-subtle">
                           {expanded ? (
                             <ChevronUp className="ml-auto h-4 w-4" />
                           ) : (
@@ -145,21 +145,21 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
 
                       {expanded && (
                         <tr>
-                          <td colSpan={8} className="bg-[#05070A] p-3">
-                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-400">
+                          <td colSpan={8} className="bg-raised p-3">
+                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
                               <span>
                                 Master Vault TX:{' '}
-                                <strong className="font-mono text-[#F5B731]">
+                                <strong className="font-mono text-gold">
                                   {r.txRef}
                                 </strong>
                               </span>
                               <span>
                                 90% Pool:{' '}
-                                <strong className="font-mono text-[#00E599]">
+                                <strong className="font-mono text-accent">
                                   {formatUsd(r.distributablePoolCents)}
                                 </strong>{' '}
                                 ÷ {r.winnerCount} winners ={' '}
-                                <strong className="font-mono text-white">
+                                <strong className="font-mono text-fg">
                                   {formatUsd(r.payoutPerWinnerCents)}
                                 </strong>{' '}
                                 ea
@@ -173,8 +173,8 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                                     key={p.betId}
                                     className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-[11px] ${
                                       p.status === 'WON'
-                                        ? 'border-[#00E599]/30 bg-[#00E599]/[0.07]'
-                                        : 'border-white/[0.05] bg-white/[0.02]'
+                                        ? 'border-accent/30 bg-accent/[0.07]'
+                                        : 'border-fg/[0.05] bg-fg/[0.02]'
                                     }`}
                                   >
                                     <div className="flex items-center gap-1.5 min-w-0">
@@ -182,15 +182,15 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                                         className="h-2 w-2 shrink-0 rounded-full"
                                         style={{ backgroundColor: p.avatarColor }}
                                       />
-                                      <span className="truncate font-semibold text-white">
+                                      <span className="truncate font-semibold text-fg">
                                         {p.username}
                                         {isMe ? ' (YOU)' : ''}
                                       </span>
                                       <span
                                         className={`font-mono text-[10px] font-bold ${
                                           p.direction === 'UP'
-                                            ? 'text-[#00E599]'
-                                            : 'text-[#FF3B69]'
+                                            ? 'text-accent'
+                                            : 'text-danger'
                                         }`}
                                       >
                                         {p.direction}
@@ -199,10 +199,10 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                                     <span
                                       className={`font-mono font-bold tabular-nums ${
                                         p.status === 'WON'
-                                          ? 'text-[#00E599]'
+                                          ? 'text-accent'
                                           : p.status === 'REFUNDED'
                                           ? 'text-sky-300'
-                                          : 'text-zinc-600'
+                                          : 'text-subtle'
                                       }`}
                                     >
                                       {p.status === 'WON'
@@ -226,14 +226,14 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
           </div>
         )
       ) : userBets.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 py-10 text-center text-xs text-zinc-500">
+        <div className="rounded-xl border border-dashed border-fg/10 py-10 text-center text-xs text-subtle">
           No predictions placed yet. Use the ticket on the right to enter the next candle.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-white/[0.06] text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              <tr className="border-b border-fg/[0.06] text-[10px] font-semibold uppercase tracking-wider text-subtle">
                 <th className="py-2 pr-3">Instrument</th>
                 <th className="py-2 px-2">Side</th>
                 <th className="py-2 px-2 text-right">Stake</th>
@@ -241,20 +241,20 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                 <th className="py-2 pl-2 text-right">Payout</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.04]">
+            <tbody className="divide-y divide-fg/[0.04]">
               {userBets.map((b) => (
-                <tr key={b.betId} className="hover:bg-white/[0.02]">
+                <tr key={b.betId} className="hover:bg-fg/[0.02]">
                   <td className="py-2.5 pr-3">
-                    <div className="font-bold text-white">
+                    <div className="font-bold text-fg">
                       {b.symbol}{' '}
-                      <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">
+                      <span className="rounded bg-fg/10 px-1.5 py-0.5 font-mono text-[10px] text-fg2">
                         {b.timeframe}
                       </span>{' '}
-                      <span className="font-mono text-zinc-500">
+                      <span className="font-mono text-subtle">
                         #{b.roundNumber}
                       </span>
                     </div>
-                    <div className="text-[10px] text-zinc-500">
+                    <div className="text-[10px] text-subtle">
                       {formatTimeShort(b.createdAt)}
                     </div>
                   </td>
@@ -262,26 +262,26 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                     <span
                       className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${
                         b.direction === 'UP'
-                          ? 'bg-[#00E599]/15 text-[#00E599]'
-                          : 'bg-[#FF3B69]/15 text-[#FF3B69]'
+                          ? 'bg-accent/15 text-accent'
+                          : 'bg-danger/15 text-danger'
                       }`}
                     >
                       {b.direction}
                     </span>
                   </td>
-                  <td className="py-2.5 px-2 text-right font-mono text-zinc-200 tabular-nums">
+                  <td className="py-2.5 px-2 text-right font-mono text-fg tabular-nums">
                     {formatUsd(b.stakeCents)}
                   </td>
                   <td className="py-2.5 px-2 text-right">
                     <span
                       className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${
                         b.status === 'WON'
-                          ? 'bg-[#00E599]/20 text-[#00E599]'
+                          ? 'bg-accent/20 text-accent'
                           : b.status === 'LOST'
-                          ? 'bg-[#FF3B69]/15 text-[#FF3B69]'
+                          ? 'bg-danger/15 text-danger'
                           : b.status === 'REFUNDED'
                           ? 'bg-sky-500/15 text-sky-300'
-                          : 'bg-[#F5B731]/15 text-[#F5B731]'
+                          : 'bg-gold/15 text-gold'
                       }`}
                     >
                       {b.status}
@@ -290,12 +290,12 @@ export const RoundHistoryPanel: React.FC<RoundHistoryPanelProps> = ({
                   <td
                     className={`py-2.5 pl-2 text-right font-mono font-bold tabular-nums ${
                       b.status === 'WON'
-                        ? 'text-[#00E599]'
+                        ? 'text-accent'
                         : b.status === 'REFUNDED'
                         ? 'text-sky-300'
                         : b.status === 'LOST'
-                        ? 'text-zinc-600'
-                        : 'text-zinc-300'
+                        ? 'text-subtle'
+                        : 'text-fg2'
                     }`}
                   >
                     {b.status === 'PENDING'

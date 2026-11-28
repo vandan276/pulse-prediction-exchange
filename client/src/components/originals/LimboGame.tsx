@@ -82,13 +82,13 @@ export const LimboGame: React.FC<LimboGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
-            <Zap className="h-4 w-4 text-[#F5B731]" />
+          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-fg">
+            <Zap className="h-4 w-4 text-gold" />
             LIMBO
           </span>
-          <span className="font-mono text-[11px] text-[#F5B731]">UP TO 1,000,000x</span>
+          <span className="font-mono text-[11px] text-gold">UP TO 1,000,000x</span>
         </div>
 
         <StakeInput
@@ -98,10 +98,10 @@ export const LimboGame: React.FC<LimboGameProps> = ({
         />
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-semibold text-zinc-400">
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted">
             Target Multiplier
           </label>
-          <div className="flex items-center rounded-xl border border-white/[0.09] bg-[#05070A] px-3">
+          <div className="flex items-center rounded-xl border border-fg/[0.09] bg-raised px-3">
             <input
               type="number"
               min="1.01"
@@ -109,9 +109,9 @@ export const LimboGame: React.FC<LimboGameProps> = ({
               step="0.5"
               value={targetStr}
               onChange={(e) => setTargetStr(e.target.value)}
-              className="w-full bg-transparent py-2.5 font-mono text-sm font-bold text-white outline-none tabular-nums"
+              className="w-full bg-transparent py-2.5 font-mono text-sm font-bold text-fg outline-none tabular-nums"
             />
-            <span className="font-mono text-xs font-bold text-[#00E599]">×</span>
+            <span className="font-mono text-xs font-bold text-accent">×</span>
           </div>
           <div className="mt-2 grid grid-cols-4 gap-1.5">
             {[1.5, 2, 5, 25].map((m) => (
@@ -119,7 +119,7 @@ export const LimboGame: React.FC<LimboGameProps> = ({
                 key={m}
                 type="button"
                 onClick={() => setTargetStr(String(m))}
-                className="rounded-lg border border-white/[0.06] bg-white/[0.02] py-1 font-mono text-[11px] font-bold text-zinc-300 hover:border-white/20 hover:text-white"
+                className="rounded-lg border border-fg/[0.06] bg-fg/[0.02] py-1 font-mono text-[11px] font-bold text-fg2 hover:border-fg/20 hover:text-fg"
               >
                 {m}x
               </button>
@@ -130,21 +130,21 @@ export const LimboGame: React.FC<LimboGameProps> = ({
         <button
           disabled={busy}
           onClick={playLimbo}
-          className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_26px_rgba(0,229,153,0.38)] transition hover:brightness-110 active:scale-[0.98]"
+          className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_26px_rgba(0,200,83,0.38)] transition hover:brightness-110 active:scale-[0.98]"
         >
           BET LIMBO
         </button>
       </div>
 
-      <div className="surface-card order-1 lg:order-2 flex flex-col justify-between rounded-2xl p-4 sm:p-6 lg:col-span-8 min-h-[280px] sm:min-h-[380px]">
+      <div className="surface-card order-1 lg:order-2 flex flex-col justify-between rounded-xl p-4 sm:p-6 lg:col-span-8 min-h-[280px] sm:min-h-[380px]">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           {history.map((h, i) => (
             <span
               key={i}
               className={`shrink-0 rounded-full px-2.5 py-0.5 font-mono text-xs font-bold tabular-nums ${
                 h.won
-                  ? 'bg-[#00E599]/20 text-[#00E599]'
-                  : 'bg-[#FF3B69]/20 text-[#FF3B69]'
+                  ? 'bg-accent/20 text-accent'
+                  : 'bg-danger/20 text-danger'
               }`}
             >
               {h.mult.toFixed(2)}x
@@ -156,30 +156,30 @@ export const LimboGame: React.FC<LimboGameProps> = ({
           <div
             className={`font-mono text-7xl sm:text-8xl font-black tracking-tight tabular-nums transition-colors ${
               lastWon === true
-                ? 'text-[#00E599] drop-shadow-[0_0_38px_rgba(0,229,153,0.5)]'
+                ? 'text-accent drop-shadow-[0_0_38px_rgba(0,200,83,0.5)]'
                 : lastWon === false
-                ? 'text-[#FF3B69] drop-shadow-[0_0_38px_rgba(255,59,105,0.45)]'
-                : 'text-white'
+                ? 'text-danger drop-shadow-[0_0_38px_rgba(255,78,78,0.45)]'
+                : 'text-fg'
             }`}
           >
             {(displayMult ?? 1.0).toFixed(2)}x
           </div>
-          <div className="mt-3 font-mono text-xs text-zinc-400">
-            Target: <strong className="text-white">{target.toFixed(2)}x</strong> · Win Chance:{' '}
-            <strong className="text-[#00E599]">{winChance}%</strong>
+          <div className="mt-3 font-mono text-xs text-muted">
+            Target: <strong className="text-fg">{target.toFixed(2)}x</strong> · Win Chance:{' '}
+            <strong className="text-accent">{winChance}%</strong>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-white/[0.07] bg-[#05070A] p-3">
-            <div className="text-[10px] uppercase text-zinc-500">Target Payout</div>
-            <div className="mt-1 font-mono text-base font-extrabold text-[#00E599] tabular-nums">
+          <div className="rounded-xl border border-fg/[0.07] bg-raised p-3">
+            <div className="text-[10px] uppercase text-subtle">Target Payout</div>
+            <div className="mt-1 font-mono text-base font-extrabold text-accent tabular-nums">
               {formatUsd(Math.floor((parseFloat(stakeDollars) || 0) * 100 * target))}
             </div>
           </div>
-          <div className="rounded-xl border border-white/[0.07] bg-[#05070A] p-3">
-            <div className="text-[10px] uppercase text-zinc-500">Win Probability</div>
-            <div className="mt-1 font-mono text-base font-extrabold text-white tabular-nums">
+          <div className="rounded-xl border border-fg/[0.07] bg-raised p-3">
+            <div className="text-[10px] uppercase text-subtle">Win Probability</div>
+            <div className="mt-1 font-mono text-base font-extrabold text-fg tabular-nums">
               {winChance}%
             </div>
           </div>

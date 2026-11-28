@@ -84,7 +84,7 @@ export const CrashGame: React.FC<CrashGameProps> = ({
 
     const isLight = document.documentElement.classList.contains('light');
     // Subtle grid lines
-    ctx.font = '500 10px "IBM Plex Mono", monospace';
+    ctx.font = '500 10px "JetBrains Mono", monospace';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     const ySteps = 4;
@@ -113,10 +113,10 @@ export const CrashGame: React.FC<CrashGameProps> = ({
 
     if (isFlying || isCrashed) {
       const strokeColor = isCrashed
-        ? '#FF3B69'
+        ? '#FF4E4E'
         : mult >= 5
-        ? '#F5B731'
-        : '#00E599';
+        ? '#FFC800'
+        : '#00C853';
 
       const samples = 70;
       const pts: Array<{ x: number; y: number }> = [];
@@ -143,10 +143,10 @@ export const CrashGame: React.FC<CrashGameProps> = ({
       grad.addColorStop(
         0,
         isCrashed
-          ? 'rgba(255,59,105,0.28)'
+          ? 'rgba(255,78,78,0.28)'
           : mult >= 5
-          ? 'rgba(245,183,49,0.28)'
-          : 'rgba(0,229,153,0.28)'
+          ? 'rgba(255,200,0,0.28)'
+          : 'rgba(0,200,83,0.28)'
       );
       grad.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = grad;
@@ -171,8 +171,8 @@ export const CrashGame: React.FC<CrashGameProps> = ({
       ctx.beginPath();
       ctx.arc(tip.x, tip.y, 11, 0, Math.PI * 2);
       ctx.fillStyle = isCrashed
-        ? 'rgba(255,59,105,0.25)'
-        : 'rgba(0,229,153,0.25)';
+        ? 'rgba(255,78,78,0.25)'
+        : 'rgba(0,200,83,0.25)';
       ctx.fill();
 
       ctx.beginPath();
@@ -191,11 +191,11 @@ export const CrashGame: React.FC<CrashGameProps> = ({
         const ct = Math.log(Math.max(1.01, cm)) / 0.068;
         const cx = padL + Math.min(1, ct / maxSec) * w;
         const cy = padT + h - ((cm - 1) / (maxY - 1)) * h;
-        ctx.fillStyle = '#00E599';
+        ctx.fillStyle = '#00C853';
         ctx.beginPath();
         ctx.arc(cx, cy, 3, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = 'rgba(0,229,153,0.85)';
+        ctx.fillStyle = 'rgba(0,200,83,0.85)';
         ctx.fillText(`${p.username} @${cm.toFixed(2)}x`, cx + 7, cy - 4);
       }
     }
@@ -272,13 +272,13 @@ export const CrashGame: React.FC<CrashGameProps> = ({
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       {/* Left Bet Controls */}
-      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-3 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-xl p-4 lg:col-span-3 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
-            <Rocket className="h-4 w-4 text-[#00E599]" />
+          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-fg">
+            <Rocket className="h-4 w-4 text-accent" />
             CRASH LIVE
           </span>
-          <span className="font-mono text-[11px] text-zinc-500">
+          <span className="font-mono text-[11px] text-subtle">
             #{crashState?.roundNumber ?? '—'}
           </span>
         </div>
@@ -291,10 +291,10 @@ export const CrashGame: React.FC<CrashGameProps> = ({
         />
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-semibold text-zinc-400">
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted">
             Auto Cashout (optional)
           </label>
-          <div className="flex items-center rounded-xl border border-white/[0.09] bg-[#05070A] px-3">
+          <div className="flex items-center rounded-xl border border-fg/[0.09] bg-raised px-3">
             <input
               type="number"
               min="1.01"
@@ -302,9 +302,9 @@ export const CrashGame: React.FC<CrashGameProps> = ({
               value={autoCashout}
               onChange={(e) => setAutoCashout(e.target.value)}
               placeholder="2.00"
-              className="w-full bg-transparent py-2.5 font-mono text-sm font-bold text-white outline-none tabular-nums"
+              className="w-full bg-transparent py-2.5 font-mono text-sm font-bold text-fg outline-none tabular-nums"
             />
-            <span className="font-mono text-xs font-bold text-zinc-400">×</span>
+            <span className="font-mono text-xs font-bold text-muted">×</span>
           </div>
         </div>
 
@@ -312,7 +312,7 @@ export const CrashGame: React.FC<CrashGameProps> = ({
           <button
             disabled={busy}
             onClick={handleCashout}
-            className="w-full rounded-xl bg-gradient-to-b from-[#FCD34D] to-[#F59E0B] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_28px_rgba(245,183,49,0.45)] transition hover:brightness-110 active:scale-[0.98]"
+            className="w-full rounded-xl bg-gradient-to-b from-gold to-gold py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_28px_rgba(255,200,0,0.45)] transition hover:brightness-110 active:scale-[0.98]"
           >
             CASH OUT {formatUsd(liveCashoutCents)}
             <div className="font-mono text-[11px] font-bold">
@@ -323,7 +323,7 @@ export const CrashGame: React.FC<CrashGameProps> = ({
           <button
             disabled={busy || !canBet}
             onClick={handleBet}
-            className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+            className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_24px_rgba(0,200,83,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {myBet?.status === 'CASHED_OUT'
               ? `CASHED OUT @ ${myBet.cashoutMultiplier?.toFixed(2)}x`
@@ -336,13 +336,13 @@ export const CrashGame: React.FC<CrashGameProps> = ({
         )}
 
         {/* Live Multiplayer Crash Players */}
-        <div className="border-t border-white/[0.06] pt-3">
+        <div className="border-t border-fg/[0.06] pt-3">
           <div className="mb-2 flex items-center justify-between text-[11px]">
-            <span className="flex items-center gap-1 font-semibold text-zinc-400">
-              <Users className="h-3.5 w-3.5 text-[#00E599]" />
+            <span className="flex items-center gap-1 font-semibold text-muted">
+              <Users className="h-3.5 w-3.5 text-accent" />
               Live Players ({crashState?.players.length ?? 0})
             </span>
-            <span className="font-mono text-zinc-500">
+            <span className="font-mono text-subtle">
               {formatUsd(
                 (crashState?.players || []).reduce((s, p) => s + p.stakeCents, 0)
               )}
@@ -354,10 +354,10 @@ export const CrashGame: React.FC<CrashGameProps> = ({
                 key={p.betId}
                 className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-[11px] ${
                   p.status === 'CASHED_OUT'
-                    ? 'border-[#00E599]/30 bg-[#00E599]/[0.07]'
+                    ? 'border-accent/30 bg-accent/[0.07]'
                     : p.status === 'BUSTED'
-                    ? 'border-[#FF3B69]/25 bg-[#FF3B69]/[0.05]'
-                    : 'border-white/[0.05] bg-[#05070A]'
+                    ? 'border-danger/25 bg-danger/[0.05]'
+                    : 'border-fg/[0.05] bg-raised'
                 }`}
               >
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -365,20 +365,20 @@ export const CrashGame: React.FC<CrashGameProps> = ({
                     className="h-2 w-2 rounded-full shrink-0"
                     style={{ backgroundColor: p.avatarColor }}
                   />
-                  <span className="truncate font-semibold text-white">
+                  <span className="truncate font-semibold text-fg">
                     {p.username}
                   </span>
-                  {p.isBot && <Bot className="h-2.5 w-2.5 text-zinc-600" />}
+                  {p.isBot && <Bot className="h-2.5 w-2.5 text-subtle" />}
                 </div>
                 <div className="font-mono tabular-nums">
                   {p.status === 'CASHED_OUT' ? (
-                    <span className="font-bold text-[#00E599]">
+                    <span className="font-bold text-accent">
                       {p.cashoutMultiplier?.toFixed(2)}x · +{formatUsd(p.payoutCents)}
                     </span>
                   ) : p.status === 'BUSTED' ? (
-                    <span className="text-[#FF3B69]">BUST</span>
+                    <span className="text-danger">BUST</span>
                   ) : (
-                    <span className="text-zinc-400">{formatUsd(p.stakeCents)}</span>
+                    <span className="text-muted">{formatUsd(p.stakeCents)}</span>
                   )}
                 </div>
               </div>
@@ -388,19 +388,19 @@ export const CrashGame: React.FC<CrashGameProps> = ({
       </div>
 
       {/* Right High-DPI Live Rocket Stage */}
-      <div className="surface-card order-1 lg:order-2 rounded-2xl p-4 lg:col-span-9 flex flex-col">
+      <div className="surface-card order-1 lg:order-2 rounded-xl p-4 lg:col-span-9 flex flex-col">
         {/* Recent Crash History Pills */}
         <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1">
-          <Flame className="h-4 w-4 shrink-0 text-[#F5B731]" />
+          <Flame className="h-4 w-4 shrink-0 text-gold" />
           {(crashState?.history || []).map((val, i) => (
             <span
               key={`${val}_${i}`}
               className={`shrink-0 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold tabular-nums ${
                 val >= 10
-                  ? 'bg-[#F5B731]/20 text-[#F5B731] ring-1 ring-[#F5B731]/40'
+                  ? 'bg-gold/20 text-gold ring-1 ring-gold/40'
                   : val >= 2
-                  ? 'bg-[#00E599]/15 text-[#00E599]'
-                  : 'bg-[#FF3B69]/15 text-[#FF3B69]'
+                  ? 'bg-accent/15 text-accent'
+                  : 'bg-danger/15 text-danger'
               }`}
             >
               {val.toFixed(2)}x
@@ -411,20 +411,20 @@ export const CrashGame: React.FC<CrashGameProps> = ({
         {/* Canvas + Giant Center Multiplier HUD */}
         <div
           ref={containerRef}
-          className="relative flex-1 min-h-[380px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#05070A]"
+          className="relative flex-1 min-h-[380px] overflow-hidden rounded-xl border border-fg/[0.06] bg-raised"
         >
           <canvas ref={canvasRef} className="h-full w-full" />
 
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             {crashState?.phase === 'BETTING' ? (
               <div className="text-center">
-                <div className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
                   Launching In
                 </div>
-                <div className="mt-1 font-mono text-6xl font-black text-white tabular-nums">
+                <div className="mt-1 font-mono text-6xl font-black text-fg tabular-nums">
                   {bettingSecsLeft.toFixed(1)}s
                 </div>
-                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[#00E599]/30 bg-[#00E599]/10 px-3 py-1 text-xs font-semibold text-[#00E599]">
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
                   Place bets before takeoff
                 </div>
               </div>
@@ -433,16 +433,16 @@ export const CrashGame: React.FC<CrashGameProps> = ({
                 <div
                   className={`font-mono text-6xl sm:text-7xl font-black tracking-tight tabular-nums ${
                     crashState?.phase === 'CRASHED'
-                      ? 'text-[#FF3B69] drop-shadow-[0_0_28px_rgba(255,59,105,0.5)]'
+                      ? 'text-danger drop-shadow-[0_0_28px_rgba(255,78,78,0.5)]'
                       : (crashState?.multiplier ?? 1) >= 5
-                      ? 'text-[#F5B731] drop-shadow-[0_0_28px_rgba(245,183,49,0.45)]'
-                      : 'text-[#00E599] drop-shadow-[0_0_28px_rgba(0,229,153,0.45)]'
+                      ? 'text-gold drop-shadow-[0_0_28px_rgba(255,200,0,0.45)]'
+                      : 'text-accent drop-shadow-[0_0_28px_rgba(0,200,83,0.45)]'
                   }`}
                 >
                   {(crashState?.multiplier ?? 1).toFixed(2)}x
                 </div>
                 {crashState?.phase === 'CRASHED' && (
-                  <div className="mt-2 inline-flex items-center rounded-full border border-[#FF3B69]/40 bg-[#FF3B69]/15 px-3.5 py-1 font-display text-xs font-black uppercase tracking-widest text-[#FF3B69]">
+                  <div className="mt-2 inline-flex items-center rounded-full border border-danger/40 bg-danger/15 px-3.5 py-1 font-display text-xs font-black uppercase tracking-widest text-danger">
                     CRASHED @ {crashState.crashPoint?.toFixed(2)}x
                   </div>
                 )}

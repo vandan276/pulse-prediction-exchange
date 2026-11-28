@@ -1,10 +1,7 @@
 import React from 'react';
 import {
-  ArrowDown,
-  ArrowUp,
   CheckCircle2,
   Clock,
-  Landmark,
   Lock,
   ShieldCheck,
   Users,
@@ -78,108 +75,68 @@ export const BetTicketPanel: React.FC<BetTicketPanelProps> = ({
     user != null && user.balanceCents < selectedTierCents;
 
   return (
-    <div className="surface-card rounded-2xl p-4 relative overflow-hidden">
-      {/* Subtle top glow matching phase */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[2px]"
-        style={{
-          background: isEntryOpen
-            ? 'linear-gradient(90deg, transparent, #00E599, transparent)'
-            : 'linear-gradient(90deg, transparent, #F5B731, transparent)',
-        }}
-      />
-
-      {/* Header: Next Candle Round + Cutoff Timer */}
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                isEntryOpen
-                  ? 'bg-[#00E599]/15 text-[#00E599] ring-1 ring-[#00E599]/30'
-                  : 'bg-[#F5B731]/15 text-[#F5B731] ring-1 ring-[#F5B731]/35'
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  isEntryOpen ? 'bg-[#00E599] animate-pulse' : 'bg-[#F5B731]'
-                }`}
-              />
-              {isEntryOpen ? 'Entries Open' : 'Anti-Snipe Sealed'}
-            </span>
-            <span className="font-mono text-[11px] font-semibold text-zinc-400">
-              #{openRound.roundNumber}
-            </span>
-          </div>
-          <h3 className="mt-1.5 font-display text-sm font-bold text-white">
-            Next {timeframe.label} Candle
-          </h3>
-        </div>
-
-        <div className="rounded-xl border border-white/[0.08] bg-[#05070A] px-2.5 py-1.5 text-right">
-          <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">
-            {isEntryOpen ? 'Entry Cutoff' : 'Candle Opens'}
-          </div>
-          <div
-            className={`flex items-center justify-end gap-1 font-mono text-sm font-extrabold tabular-nums ${
-              isEntryOpen
-                ? cutoffMsRemaining < 10_000
-                  ? 'text-[#F5B731]'
-                  : 'text-white'
-                : 'text-[#F5B731]'
-            }`}
-          >
+    <div className="surface-card rounded-2xl p-5">
+      {/* Probability Split — Apex Pro Fintech Signature */}
+      <div>
+        <div className="flex items-center justify-between text-xs font-medium text-muted">
+          <span>Probability split</span>
+          <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-fg tabular-nums">
             {isEntryOpen ? (
-              <Clock className="h-3.5 w-3.5 text-[#00E599]" />
+              <Clock className="h-3 w-3 text-accent" />
             ) : (
-              <Lock className="h-3.5 w-3.5 text-[#F5B731]" />
+              <Lock className="h-3 w-3 text-gold" />
             )}
             {formatCountdown(isEntryOpen ? cutoffMsRemaining : lockMsRemaining)}
-          </div>
+          </span>
         </div>
-      </div>
 
-      {/* Anti-Snipe Cutoff Countdown Progress */}
-      <div className="mt-2.5">
-        <div className="mb-1 flex items-center justify-between text-[10px] text-zinc-400">
-          <span className="flex items-center gap-1">
-            <ShieldCheck className="h-3 w-3 text-[#00E599]" />
-            Anti-Snipe Shield ({cutoffSec}s pre-lock)
-          </span>
-          <span className="font-mono text-zinc-300 tabular-nums">
-            Opens in {formatCountdown(lockMsRemaining)}
-          </span>
+        <div className="mt-2 flex items-baseline justify-between font-display text-sm font-bold tabular-nums">
+          <span className="text-accent">{upPct}% UP</span>
+          <span className="text-danger">{dnPct}% DOWN</span>
         </div>
-        <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.07]">
+
+        <div className="mt-1.5 flex h-2 w-full overflow-hidden rounded-full bg-raised">
           <div
-            className={`h-full rounded-full transition-all duration-300 ${
-              isEntryOpen ? 'bg-[#00E599]' : 'bg-[#F5B731]'
-            }`}
-            style={{ width: isEntryOpen ? `${openPctLeft}%` : '100%' }}
+            className="h-full bg-accent transition-all duration-300"
+            style={{ width: `${upPct}%` }}
+          />
+          <div
+            className="h-full bg-danger transition-all duration-300"
+            style={{ width: `${dnPct}%` }}
           />
         </div>
-      </div>
 
-      {/* Fixed Stake Tier Pills */}
-      <div className="mt-3.5">
-        <div className="mb-1.5 flex items-center justify-between text-[11px]">
-          <span className="font-medium text-zinc-400">Equal-Split Room Stake</span>
-          <span className="flex items-center gap-1 font-mono text-zinc-300 tabular-nums">
-            <Users className="h-3 w-3 text-[#00E599]" />
+        <div className="mt-2 flex items-center justify-between text-[11px] text-muted">
+          <span className="inline-flex items-center gap-1">
+            <ShieldCheck className="h-3 w-3 text-accent" />
+            Next {timeframe.label} #{openRound.roundNumber}
+          </span>
+          <span className="inline-flex items-center gap-1 font-mono tabular-nums">
+            <Users className="h-3 w-3" />
             {openRound.playerCount} queued
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-white/[0.06] bg-[#05070A] p-1">
+      </div>
+
+      {/* Rounded Stake Pills with Royal Cobalt Active Ring */}
+      <div className="mt-5">
+        <div className="mb-2 flex items-center justify-between text-xs font-medium text-muted">
+          <span>Stake</span>
+          <span className="font-mono text-[11px]">
+            Pool {formatUsd(openRound.totalPoolCents)}
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
           {tiers.map((tier) => {
             const active = tier.amountCents === selectedTierCents;
             return (
               <button
                 key={tier.id}
                 onClick={() => onSelectTier(tier.amountCents)}
-                className={`rounded-lg py-1.5 font-mono text-xs font-bold transition-all tabular-nums ${
+                className={`rounded-full border py-2 font-mono text-sm font-bold transition-all tabular-nums ${
                   active
-                    ? 'bg-white text-[#040507] shadow-sm'
-                    : 'text-zinc-400 hover:bg-white/[0.05] hover:text-white'
+                    ? 'border-info bg-info/10 text-info ring-1 ring-info/40'
+                    : 'border-line bg-surface text-fg hover:bg-raised'
                 }`}
               >
                 {tier.label}
@@ -189,75 +146,64 @@ export const BetTicketPanel: React.FC<BetTicketPanelProps> = ({
         </div>
       </div>
 
-      {/* Bull vs Bear Tug-of-War Bar */}
-      <div className="mt-3.5 rounded-xl border border-white/[0.06] bg-[#05070A] p-3">
-        <div className="mb-1.5 flex items-center justify-between font-mono text-[11px] font-bold tabular-nums">
-          <span className="text-[#00E599]">
-            UP {openRound.upCount} ({upPct}%)
-          </span>
-          <span className="text-zinc-500 text-[10px]">POOL SPLIT</span>
-          <span className="text-[#FF3B69]">
-            ({dnPct}%) {openRound.downCount} DN
+      {/* Clean Payout Model Breakdown */}
+      <div className="mt-5 space-y-2 border-t border-line pt-4 text-xs">
+        <div className="flex items-center justify-between">
+          <span className="text-muted">Payout Model</span>
+          <span className="font-semibold text-fg">90% Equal Split</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted">Master Vault Fee</span>
+          <span className="font-mono font-medium text-fg2 tabular-nums">
+            10% ({formatUsd(openRound.masterFeeCents)})
           </span>
         </div>
-        <div className="flex h-2 w-full overflow-hidden rounded-full bg-white/[0.06] gap-[2px]">
-          <div
-            className="h-full rounded-l-full bg-[#00E599] shadow-[0_0_12px_rgba(0,229,153,0.45)] transition-all duration-300"
-            style={{ width: `${upPct}%` }}
-          />
-          <div
-            className="h-full rounded-r-full bg-[#FF3B69] shadow-[0_0_12px_rgba(255,59,105,0.45)] transition-all duration-300"
-            style={{ width: `${dnPct}%` }}
-          />
+        <div className="flex items-center justify-between">
+          <span className="text-muted">Est. Return (UP / DN)</span>
+          <span className="font-mono font-bold text-accent tabular-nums">
+            {formatUsd(projUpPayout)} / {formatUsd(projDownPayout)}
+          </span>
         </div>
+      </div>
 
-        <div className="mt-2.5 space-y-1 text-[11px]">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-400">Queued Pool</span>
-            <span className="font-mono font-bold text-white tabular-nums">
-              {formatUsd(openRound.totalPoolCents)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1 text-[#F5B731]/90">
-              <Landmark className="h-3 w-3" />
-              Master Vault (10%)
-            </span>
-            <span className="font-mono font-semibold text-[#F5B731] tabular-nums">
-              -{formatUsd(openRound.masterFeeCents)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between border-t border-white/[0.06] pt-1">
-            <span className="font-semibold text-[#00E599]">90% Equal Split</span>
-            <span className="font-mono font-bold text-[#00E599] tabular-nums">
-              {formatUsd(openRound.distributablePoolCents)}
-            </span>
-          </div>
+      {/* Anti-Snipe Bar */}
+      <div className="mt-3.5">
+        <div className="h-1 w-full overflow-hidden rounded-full bg-raised">
+          <div
+            className={`h-full rounded-full transition-all duration-300 ${
+              isEntryOpen ? 'bg-accent' : 'bg-gold'
+            }`}
+            style={{ width: isEntryOpen ? `${openPctLeft}%` : '100%' }}
+          />
+        </div>
+        <div className="mt-1 flex items-center justify-between text-[10px] text-subtle">
+          <span>{isEntryOpen ? `Anti-Snipe (${cutoffSec}s cutoff)` : 'Entries Sealed'}</span>
+          <span className="font-mono tabular-nums">Opens {formatCountdown(lockMsRemaining)}</span>
         </div>
       </div>
 
       {/* Execution Area */}
       {myBet ? (
         <div
-          className={`mt-3.5 rounded-xl border p-3.5 ${
+          className={`mt-4 rounded-xl border p-3.5 ${
             myBet.direction === 'UP'
-              ? 'border-[#00E599]/45 bg-[#00E599]/[0.09]'
-              : 'border-[#FF3B69]/45 bg-[#FF3B69]/[0.09]'
+              ? 'border-accent/40 bg-accent/10'
+              : 'border-danger/40 bg-danger/10'
           }`}
         >
           <div className="flex items-start gap-2.5">
             <CheckCircle2
               className={`h-5 w-5 shrink-0 mt-0.5 ${
-                myBet.direction === 'UP' ? 'text-[#00E599]' : 'text-[#FF3B69]'
+                myBet.direction === 'UP' ? 'text-accent' : 'text-danger'
               }`}
             />
             <div>
-              <div className="font-display text-xs font-bold uppercase tracking-wide text-white">
+              <div className="font-display text-xs font-bold uppercase tracking-wide text-fg">
                 Position Locked — {myBet.direction} ({formatUsd(myBet.stakeCents)})
               </div>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-300">
-                Strike price locks when Round #{openRound.roundNumber} begins in{' '}
-                <strong className="font-mono text-white">
+              <p className="mt-0.5 text-[11px] leading-relaxed text-fg2">
+                Strike locks when Round #{openRound.roundNumber} begins in{' '}
+                <strong className="font-mono text-fg">
                   {formatCountdown(lockMsRemaining)}
                 </strong>
                 .
@@ -266,67 +212,67 @@ export const BetTicketPanel: React.FC<BetTicketPanelProps> = ({
           </div>
         </div>
       ) : !isEntryOpen ? (
-        /* HARD ANTI-SNIPE SEALED STATE */
-        <div className="mt-3.5 rounded-xl border border-[#F5B731]/35 bg-[#F5B731]/[0.07] p-4 text-center">
-          <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-[#F5B731]/15 text-[#F5B731] ring-1 ring-[#F5B731]/35">
+        <div className="mt-4 rounded-xl border border-gold/35 bg-gold/10 p-4 text-center">
+          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-gold/15 text-gold">
             <Lock className="h-4 w-4" />
           </div>
-          <div className="mt-2 font-display text-xs font-bold uppercase tracking-wider text-[#F5B731]">
+          <div className="mt-2 font-display text-xs font-bold uppercase tracking-wider text-gold">
             Entries Sealed — Anti-Snipe Lock
           </div>
-          <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">
-            Betting closes{' '}
-            <strong className="text-white">{cutoffSec}s before</strong> each
-            candle opens so no one can snipe at the last second. Round #
-            {openRound.roundNumber} locks in{' '}
-            <strong className="font-mono text-[#F5B731]">
+          <p className="mt-1 text-[11px] leading-relaxed text-fg2">
+            Betting closes <strong className="text-fg">{cutoffSec}s before</strong> open. Round #
+            {openRound.roundNumber} starts in{' '}
+            <strong className="font-mono text-gold">
               {formatCountdown(lockMsRemaining)}
             </strong>
             .
           </p>
         </div>
       ) : !user ? (
-        <button
-          onClick={onOpenUserModal}
-          className="mt-3.5 w-full rounded-xl bg-[#00E599] py-3 font-display text-sm font-bold text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.3)] transition hover:brightness-110"
-        >
-          Connect Wallet to Predict
-        </button>
+        <div className="mt-4 space-y-2.5">
+          <button
+            onClick={onOpenUserModal}
+            className="btn-glow w-full rounded-xl bg-accent py-3 font-display text-sm font-bold text-onaccent transition hover:brightness-105"
+          >
+            Predict UP · {upMult.toFixed(2)}x
+          </button>
+          <button
+            onClick={onOpenUserModal}
+            className="w-full rounded-xl bg-danger py-3 font-display text-sm font-bold text-white transition hover:brightness-105"
+          >
+            Predict DOWN · {dnMult.toFixed(2)}x
+          </button>
+          <p className="text-center text-[11px] text-muted">
+            Sign in or create an account to lock your prediction.
+          </p>
+        </div>
       ) : (
-        <div className="mt-3.5 space-y-2">
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              disabled={placing || insufficientBalance}
-              onClick={() => onPlaceBet('UP')}
-              className="btn-glow group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] px-3 py-3.5 text-[#040507] shadow-[0_10px_28px_-8px_rgba(0,229,153,0.55)] ring-1 ring-white/25 transition hover:brightness-110 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <div className="flex items-center gap-1 font-display text-sm font-bold tracking-tight">
-                <ArrowUp className="h-4 w-4 stroke-[3]" />
-                HIGHER
-              </div>
-              <div className="mt-0.5 font-mono text-[11px] font-bold text-[#040507]/80 tabular-nums">
-                {formatUsd(projUpPayout)} · {upMult.toFixed(2)}x
-              </div>
-            </button>
+        <div className="mt-4 space-y-2.5">
+          <button
+            disabled={placing || insufficientBalance}
+            onClick={() => onPlaceBet('UP')}
+            className="btn-glow flex w-full items-center justify-between rounded-xl bg-accent px-4 py-3 text-onaccent transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <span className="font-display text-sm font-bold">Predict UP</span>
+            <span className="font-mono text-xs font-bold tabular-nums opacity-95">
+              {formatUsd(projUpPayout)} ({upMult.toFixed(2)}x)
+            </span>
+          </button>
 
-            <button
-              disabled={placing || insufficientBalance}
-              onClick={() => onPlaceBet('DOWN')}
-              className="btn-glow group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-[#FF4774] to-[#E11D48] px-3 py-3.5 text-white shadow-[0_10px_28px_-8px_rgba(255,59,105,0.5)] ring-1 ring-white/20 transition hover:brightness-110 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <div className="flex items-center gap-1 font-display text-sm font-bold tracking-tight">
-                <ArrowDown className="h-4 w-4 stroke-[3]" />
-                LOWER
-              </div>
-              <div className="mt-0.5 font-mono text-[11px] font-bold text-white/90 tabular-nums">
-                {formatUsd(projDownPayout)} · {dnMult.toFixed(2)}x
-              </div>
-            </button>
-          </div>
+          <button
+            disabled={placing || insufficientBalance}
+            onClick={() => onPlaceBet('DOWN')}
+            className="flex w-full items-center justify-between rounded-xl bg-danger px-4 py-3 text-white shadow-[0_4px_14px_-4px_rgba(255,59,92,0.45)] transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <span className="font-display text-sm font-bold">Predict DOWN</span>
+            <span className="font-mono text-xs font-bold tabular-nums opacity-95">
+              {formatUsd(projDownPayout)} ({dnMult.toFixed(2)}x)
+            </span>
+          </button>
 
           {insufficientBalance && (
-            <p className="text-center text-[11px] font-medium text-[#F5B731]">
-              Insufficient balance — tap <strong>+500</strong> in the top bar.
+            <p className="text-center text-[11px] font-medium text-gold">
+              Insufficient balance — tap <strong>+ Deposit USDT</strong> above to fund your wallet.
             </p>
           )}
         </div>

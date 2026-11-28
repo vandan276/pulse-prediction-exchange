@@ -139,12 +139,12 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
 
             const fillColor =
               mult >= 10
-                ? '#F5B731'
+                ? '#FFC800'
                 : mult >= 2
-                ? '#00E599'
+                ? '#00C853'
                 : mult >= 1
                 ? '#38BDF8'
-                : '#FF3B69';
+                : '#FF4E4E';
 
             ctx.save();
             if (flashAge < 1) {
@@ -158,7 +158,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
             ctx.fill();
             ctx.restore();
 
-            ctx.fillStyle = '#040507';
+            ctx.fillStyle = '#0A0B0E';
             ctx.font = `800 ${rows === 16 ? 8.5 : 10}px "JetBrains Mono", monospace`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -210,11 +210,11 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
             const by = startY + (endY - startY) * (t * t) + arc;
 
             ctx.save();
-            ctx.shadowColor = '#00E599';
+            ctx.shadowColor = '#00C853';
             ctx.shadowBlur = 14;
             ctx.beginPath();
             ctx.arc(bx, by, rows === 16 ? 5 : 6.5, 0, Math.PI * 2);
-            ctx.fillStyle = '#00E599';
+            ctx.fillStyle = '#00C853';
             ctx.fill();
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 1.5;
@@ -272,13 +272,13 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
-            <Sparkles className="h-4 w-4 text-[#F5B731]" />
+          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-fg">
+            <Sparkles className="h-4 w-4 text-gold" />
             PLINKO
           </span>
-          <span className="font-mono text-[11px] text-[#F5B731]">
+          <span className="font-mono text-[11px] text-gold">
             MAX {Math.max(...buckets)}x
           </span>
         </div>
@@ -290,7 +290,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
         />
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-semibold text-zinc-400">
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted">
             Risk Level
           </label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -300,8 +300,8 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
                 onClick={() => setRisk(r)}
                 className={`rounded-xl border py-2 text-xs font-bold capitalize transition ${
                   risk === r
-                    ? 'border-[#00E599]/60 bg-[#00E599]/15 text-[#00E599]'
-                    : 'border-white/[0.06] bg-[#05070A] text-zinc-400 hover:text-white'
+                    ? 'border-accent/60 bg-accent/15 text-accent'
+                    : 'border-fg/[0.06] bg-raised text-muted hover:text-fg'
                 }`}
               >
                 {r}
@@ -311,7 +311,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-semibold text-zinc-400">
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted">
             Peg Rows
           </label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -324,8 +324,8 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
                 }}
                 className={`rounded-xl border py-2 font-mono text-xs font-bold transition ${
                   rows === n
-                    ? 'border-white bg-white text-[#040507]'
-                    : 'border-white/[0.06] bg-[#05070A] text-zinc-400 hover:text-white'
+                    ? 'border-fg bg-fg text-inverse'
+                    : 'border-fg/[0.06] bg-raised text-muted hover:text-fg'
                 }`}
               >
                 {n} Rows
@@ -337,14 +337,14 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
         <button
           disabled={dropping}
           onClick={dropBall}
-          className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_26px_rgba(0,229,153,0.38)] transition hover:brightness-110 active:scale-[0.98]"
+          className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_26px_rgba(0,200,83,0.38)] transition hover:brightness-110 active:scale-[0.98]"
         >
           DROP BALL
         </button>
 
         {recentHits.length > 0 && (
-          <div className="space-y-1.5 border-t border-white/[0.06] pt-3">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+          <div className="space-y-1.5 border-t border-fg/[0.06] pt-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-subtle">
               Recent Drops
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -353,10 +353,10 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
                   key={i}
                   className={`rounded-lg px-2 py-1 font-mono text-[11px] font-bold ${
                     h.mult >= 5
-                      ? 'bg-[#F5B731]/20 text-[#F5B731]'
+                      ? 'bg-gold/20 text-gold'
                       : h.mult >= 1
-                      ? 'bg-[#00E599]/15 text-[#00E599]'
-                      : 'bg-[#FF3B69]/15 text-[#FF3B69]'
+                      ? 'bg-accent/15 text-accent'
+                      : 'bg-danger/15 text-danger'
                   }`}
                 >
                   {h.mult}x
@@ -368,7 +368,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = ({
       </div>
 
       {/* Right 60fps Peg Pyramid Canvas */}
-      <div className="surface-card order-1 lg:order-2 flex items-center justify-center rounded-2xl p-4 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex items-center justify-center rounded-xl p-4 lg:col-span-8">
         <canvas
           ref={canvasRef}
           className="h-auto w-full max-w-[660px]"

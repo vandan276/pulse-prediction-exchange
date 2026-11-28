@@ -13,9 +13,9 @@ interface WheelGameProps {
 
 function colorForMultiplier(m: number): string {
   if (m === 0) return '#181C24';
-  if (m >= 10) return '#F5B731';
+  if (m >= 10) return '#FFC800';
   if (m >= 3) return '#A855F7';
-  if (m >= 2) return '#00E599';
+  if (m >= 2) return '#00C853';
   if (m >= 1.5) return '#38BDF8';
   return '#10B981';
 }
@@ -82,7 +82,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
       ctx.closePath();
       ctx.fillStyle = m === 0 && isLight ? '#E2E8F0' : colorForMultiplier(m);
       ctx.fill();
-      ctx.strokeStyle = isLight ? '#FFFFFF' : '#040507';
+      ctx.strokeStyle = isLight ? '#FFFFFF' : '#0A0B0E';
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -91,8 +91,8 @@ export const WheelGame: React.FC<WheelGameProps> = ({
         const mid = (a0 + a1) / 2;
         ctx.save();
         ctx.rotate(mid);
-        ctx.fillStyle = '#040507';
-        ctx.font = '800 10px "IBM Plex Mono", monospace';
+        ctx.fillStyle = '#0A0B0E';
+        ctx.font = '800 10px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(`${m}x`, (outerR + innerR) / 2, 0);
@@ -104,7 +104,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
     // Inner hub
     ctx.beginPath();
     ctx.arc(cx, cy, innerR - 6, 0, Math.PI * 2);
-    ctx.fillStyle = isLight ? '#FFFFFF' : '#07090D';
+    ctx.fillStyle = isLight ? '#FFFFFF' : '#1A2C38';
     ctx.fill();
     ctx.strokeStyle = isLight ? '#E2E8F0' : 'rgba(255,255,255,0.1)';
     ctx.lineWidth = 2;
@@ -116,9 +116,9 @@ export const WheelGame: React.FC<WheelGameProps> = ({
     ctx.lineTo(cx - 11, cy - outerR - 14);
     ctx.lineTo(cx + 11, cy - outerR - 14);
     ctx.closePath();
-    ctx.fillStyle = '#F5B731';
+    ctx.fillStyle = '#FFC800';
     ctx.fill();
-    ctx.strokeStyle = '#040507';
+    ctx.strokeStyle = '#0A0B0E';
     ctx.lineWidth = 2;
     ctx.stroke();
   }, [wheel, rotation]);
@@ -188,13 +188,13 @@ export const WheelGame: React.FC<WheelGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
+          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-fg">
             <Disc3 className="h-4 w-4 text-[#A855F7]" />
             WHEEL
           </span>
-          <span className="font-mono text-[11px] text-[#F5B731]">
+          <span className="font-mono text-[11px] text-gold">
             MAX {wheel.length ? Math.max(...wheel) : 0}x
           </span>
         </div>
@@ -207,7 +207,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
         />
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-semibold text-zinc-400">
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted">
             Risk
           </label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -218,8 +218,8 @@ export const WheelGame: React.FC<WheelGameProps> = ({
                 onClick={() => setRisk(r)}
                 className={`rounded-xl border py-2 text-xs font-bold capitalize transition ${
                   risk === r
-                    ? 'border-[#00E599]/60 bg-[#00E599]/15 text-[#00E599]'
-                    : 'border-white/[0.06] bg-[#05070A] text-zinc-400 hover:text-white'
+                    ? 'border-accent/60 bg-accent/15 text-accent'
+                    : 'border-fg/[0.06] bg-raised text-muted hover:text-fg'
                 }`}
               >
                 {r}
@@ -229,7 +229,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-semibold text-zinc-400">
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted">
             Segments
           </label>
           <div className="grid grid-cols-5 gap-1">
@@ -240,8 +240,8 @@ export const WheelGame: React.FC<WheelGameProps> = ({
                 onClick={() => setSegments(s)}
                 className={`rounded-lg border py-1.5 font-mono text-xs font-bold transition ${
                   segments === s
-                    ? 'border-white bg-white text-[#040507]'
-                    : 'border-white/[0.06] bg-[#05070A] text-zinc-400 hover:text-white'
+                    ? 'border-fg bg-fg text-inverse'
+                    : 'border-fg/[0.06] bg-raised text-muted hover:text-fg'
                 }`}
               >
                 {s}
@@ -253,14 +253,14 @@ export const WheelGame: React.FC<WheelGameProps> = ({
         <button
           disabled={spinning}
           onClick={spinWheel}
-          className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_26px_rgba(0,229,153,0.38)] transition hover:brightness-110 disabled:opacity-50"
+          className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_26px_rgba(0,200,83,0.38)] transition hover:brightness-110 disabled:opacity-50"
         >
           {spinning ? 'SPINNING...' : 'SPIN WHEEL'}
         </button>
       </div>
 
       {/* Right Spinning Canvas */}
-      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-2xl p-4 sm:p-6 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-xl p-4 sm:p-6 lg:col-span-8">
         <div className="relative flex items-center justify-center">
           <canvas
             ref={canvasRef}
@@ -270,16 +270,16 @@ export const WheelGame: React.FC<WheelGameProps> = ({
             <span
               className={`font-mono text-3xl font-black tabular-nums ${
                 lastResult == null
-                  ? 'text-white'
+                  ? 'text-fg'
                   : lastResult.mult > 0
-                  ? 'text-[#00E599]'
-                  : 'text-[#FF3B69]'
+                  ? 'text-accent'
+                  : 'text-danger'
               }`}
             >
               {lastResult != null ? `${lastResult.mult}x` : 'SPIN'}
             </span>
             {lastResult != null && lastResult.payout > 0 && (
-              <span className="mt-0.5 font-mono text-xs font-bold text-[#F5B731]">
+              <span className="mt-0.5 font-mono text-xs font-bold text-gold">
                 +{formatUsd(lastResult.payout)}
               </span>
             )}
@@ -290,7 +290,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
           {uniqueMults.map((m) => (
             <div
               key={m}
-              className="flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-[#05070A] px-2.5 py-1 font-mono text-xs font-bold text-zinc-200"
+              className="flex items-center gap-1.5 rounded-lg border border-fg/[0.08] bg-raised px-2.5 py-1 font-mono text-xs font-bold text-fg"
             >
               <span
                 className="h-2.5 w-2.5 rounded-sm"

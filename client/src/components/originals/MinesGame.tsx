@@ -131,13 +131,13 @@ export const MinesGame: React.FC<MinesGameProps> = ({
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       {/* Left Controls */}
-      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
-            <Diamond className="h-4 w-4 text-[#00E599]" />
+          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-fg">
+            <Diamond className="h-4 w-4 text-accent" />
             MINES 5×5
           </span>
-          <span className="font-mono text-[11px] text-zinc-500">99% RTP</span>
+          <span className="font-mono text-[11px] text-subtle">99% RTP</span>
         </div>
 
         <StakeInput
@@ -149,8 +149,8 @@ export const MinesGame: React.FC<MinesGameProps> = ({
 
         <div>
           <div className="mb-1.5 flex items-center justify-between text-[11px]">
-            <span className="font-semibold text-zinc-400">Mines Count</span>
-            <span className="font-mono font-bold text-white">
+            <span className="font-semibold text-muted">Mines Count</span>
+            <span className="font-mono font-bold text-fg">
               {mineCount} Mines · {25 - mineCount} Gems
             </span>
           </div>
@@ -162,8 +162,8 @@ export const MinesGame: React.FC<MinesGameProps> = ({
                 onClick={() => setMineCount(m)}
                 className={`rounded-lg border py-1.5 font-mono text-xs font-bold transition ${
                   mineCount === m
-                    ? 'border-[#00E599]/60 bg-[#00E599]/15 text-[#00E599]'
-                    : 'border-white/[0.06] bg-[#05070A] text-zinc-400 hover:text-white'
+                    ? 'border-accent/60 bg-accent/15 text-accent'
+                    : 'border-fg/[0.06] bg-raised text-muted hover:text-fg'
                 } disabled:opacity-40`}
               >
                 {m}
@@ -177,7 +177,7 @@ export const MinesGame: React.FC<MinesGameProps> = ({
             disabled={isActive}
             value={mineCount}
             onChange={(e) => setMineCount(Number(e.target.value))}
-            className="mt-2.5 w-full accent-[#00E599]"
+            className="mt-2.5 w-full accent-[#00C853]"
           />
         </div>
 
@@ -186,7 +186,7 @@ export const MinesGame: React.FC<MinesGameProps> = ({
             <button
               disabled={busy || (session?.revealed.length ?? 0) < 1}
               onClick={cashOut}
-              className="w-full rounded-xl bg-gradient-to-b from-[#FCD34D] to-[#F59E0B] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_24px_rgba(245,183,49,0.4)] transition hover:brightness-110 disabled:opacity-40"
+              className="w-full rounded-xl bg-gradient-to-b from-gold to-gold py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_24px_rgba(255,200,0,0.4)] transition hover:brightness-110 disabled:opacity-40"
             >
               CASH OUT {formatUsd(session!.currentPayoutCents)}
               <div className="font-mono text-[11px] font-bold">
@@ -196,9 +196,9 @@ export const MinesGame: React.FC<MinesGameProps> = ({
             <button
               disabled={busy}
               onClick={pickRandom}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-white/[0.08]"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-fg/10 bg-fg/[0.04] py-2.5 text-xs font-bold text-fg transition hover:bg-fg/[0.08]"
             >
-              <Shuffle className="h-3.5 w-3.5 text-[#00E599]" />
+              <Shuffle className="h-3.5 w-3.5 text-accent" />
               Pick Random Tile (Next {session!.nextMultiplier.toFixed(2)}x)
             </button>
           </div>
@@ -206,7 +206,7 @@ export const MinesGame: React.FC<MinesGameProps> = ({
           <button
             disabled={busy}
             onClick={startBoard}
-            className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.35)] transition hover:brightness-110"
+            className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_24px_rgba(0,200,83,0.35)] transition hover:brightness-110"
           >
             START MINES BOARD
           </button>
@@ -214,29 +214,29 @@ export const MinesGame: React.FC<MinesGameProps> = ({
       </div>
 
       {/* Right 5x5 Obsidian Grid */}
-      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-2xl p-4 sm:p-6 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-xl p-4 sm:p-6 lg:col-span-8">
         <div className="mb-4 flex w-full max-w-[440px] items-center justify-between font-mono text-xs">
-          <span className="text-zinc-400">
+          <span className="text-muted">
             Multiplier:{' '}
-            <strong className="text-[#00E599] text-sm">
+            <strong className="text-accent text-sm">
               {(session?.currentMultiplier ?? 1).toFixed(2)}x
             </strong>
           </span>
           {session && isActive && (
-            <span className="text-zinc-400">
+            <span className="text-muted">
               Next Gem:{' '}
-              <strong className="text-[#F5B731]">
+              <strong className="text-gold">
                 {session.nextMultiplier.toFixed(2)}x
               </strong>
             </span>
           )}
           {session?.status === 'CASHED_OUT' && (
-            <span className="rounded-full bg-[#00E599]/20 px-2.5 py-0.5 font-bold text-[#00E599]">
+            <span className="rounded-full bg-accent/20 px-2.5 py-0.5 font-bold text-accent">
               WON {formatUsd(session.currentPayoutCents)}
             </span>
           )}
           {session?.status === 'LOST' && (
-            <span className="rounded-full bg-[#FF3B69]/20 px-2.5 py-0.5 font-bold text-[#FF3B69]">
+            <span className="rounded-full bg-danger/20 px-2.5 py-0.5 font-bold text-danger">
               DETONATED
             </span>
           )}
@@ -256,30 +256,30 @@ export const MinesGame: React.FC<MinesGameProps> = ({
                 onClick={() => revealTile(idx)}
                 className={`aspect-square rounded-xl border flex items-center justify-center transition-all duration-150 ${
                   isHitMine
-                    ? 'border-[#FF3B69] bg-[#FF3B69]/25 shadow-[0_0_24px_rgba(255,59,105,0.45)] scale-95'
+                    ? 'border-danger bg-danger/25 shadow-[0_0_24px_rgba(255,78,78,0.45)] scale-95'
                     : isMine
-                    ? 'border-[#FF3B69]/40 bg-[#FF3B69]/10'
+                    ? 'border-danger/40 bg-danger/10'
                     : isRevealedGem
-                    ? 'border-[#00E599]/60 bg-[#00E599]/15 shadow-[0_0_20px_rgba(0,229,153,0.28)]'
+                    ? 'border-accent/60 bg-accent/15 shadow-[0_0_20px_rgba(0,200,83,0.28)]'
                     : boardEnded
-                    ? 'border-white/[0.04] bg-[#06080D] opacity-45'
+                    ? 'border-fg/[0.04] bg-base opacity-45'
                     : isActive
-                    ? 'border-white/[0.09] bg-[#10141D] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_0_#040507] hover:-translate-y-0.5 hover:border-[#00E599]/40 hover:bg-[#151B28] active:translate-y-0'
-                    : 'border-white/[0.06] bg-[#0B0E14]'
+                    ? 'border-fg/[0.09] bg-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_0_rgb(var(--base))] hover:-translate-y-0.5 hover:border-accent/40 hover:bg-raised active:translate-y-0'
+                    : 'border-fg/[0.06] bg-surface'
                 }`}
               >
                 {isMine ? (
                   <Bomb
                     className={`h-7 w-7 ${
                       isHitMine
-                        ? 'text-[#FF3B69] animate-pulse'
-                        : 'text-[#FF3B69]/75'
+                        ? 'text-danger animate-pulse'
+                        : 'text-danger/75'
                     }`}
                   />
                 ) : isRevealedGem ? (
-                  <Diamond className="h-7 w-7 text-[#00E599] drop-shadow-[0_0_12px_rgba(0,229,153,0.8)]" />
+                  <Diamond className="h-7 w-7 text-accent drop-shadow-[0_0_12px_rgba(0,200,83,0.8)]" />
                 ) : boardEnded ? (
-                  <Diamond className="h-4 w-4 text-zinc-700" />
+                  <Diamond className="h-4 w-4 text-subtle" />
                 ) : null}
               </button>
             );

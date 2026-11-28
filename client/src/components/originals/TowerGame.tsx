@@ -136,13 +136,13 @@ export const TowerGame: React.FC<TowerGameProps> = ({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="surface-card order-2 lg:order-1 rounded-2xl p-4 lg:col-span-4 space-y-4">
+      <div className="surface-card order-2 lg:order-1 rounded-xl p-4 lg:col-span-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-white">
-            <Flame className="h-4 w-4 text-[#F5B731]" />
+          <span className="inline-flex items-center gap-1.5 font-display text-sm font-bold text-fg">
+            <Flame className="h-4 w-4 text-gold" />
             DRAGON TOWER
           </span>
-          <span className="font-mono text-[11px] text-zinc-500">9 FLOORS</span>
+          <span className="font-mono text-[11px] text-subtle">9 FLOORS</span>
         </div>
 
         <StakeInput
@@ -153,7 +153,7 @@ export const TowerGame: React.FC<TowerGameProps> = ({
         />
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-semibold text-zinc-400">
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted">
             Difficulty
           </label>
           <div className="grid grid-cols-2 gap-1.5">
@@ -164,12 +164,12 @@ export const TowerGame: React.FC<TowerGameProps> = ({
                 onClick={() => setDifficulty(d.id)}
                 className={`rounded-xl border px-3 py-2 text-left transition ${
                   difficulty === d.id
-                    ? 'border-[#F5B731]/60 bg-[#F5B731]/12 text-white'
-                    : 'border-white/[0.06] bg-[#05070A] text-zinc-400 hover:border-white/20'
+                    ? 'border-gold/60 bg-gold/12 text-fg'
+                    : 'border-fg/[0.06] bg-raised text-muted hover:border-fg/20'
                 } disabled:opacity-45`}
               >
                 <div className="text-xs font-bold">{d.label}</div>
-                <div className="font-mono text-[10px] text-zinc-500">
+                <div className="font-mono text-[10px] text-subtle">
                   {d.cols - d.bombs}/{d.cols} safe
                 </div>
               </button>
@@ -181,7 +181,7 @@ export const TowerGame: React.FC<TowerGameProps> = ({
           <button
             disabled={busy || (session?.currentFloor ?? 0) < 1}
             onClick={cashOut}
-            className="w-full rounded-xl bg-gradient-to-b from-[#FCD34D] to-[#F59E0B] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_24px_rgba(245,183,49,0.4)] transition hover:brightness-110 disabled:opacity-40"
+            className="w-full rounded-xl bg-gradient-to-b from-gold to-gold py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_24px_rgba(255,200,0,0.4)] transition hover:brightness-110 disabled:opacity-40"
           >
             CASH OUT {formatUsd(session!.currentPayoutCents)} (
             {session!.currentMultiplier.toFixed(2)}x)
@@ -190,7 +190,7 @@ export const TowerGame: React.FC<TowerGameProps> = ({
           <button
             disabled={busy}
             onClick={startClimb}
-            className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_26px_rgba(0,229,153,0.38)] transition hover:brightness-110"
+            className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_26px_rgba(0,200,83,0.38)] transition hover:brightness-110"
           >
             BEGIN CLIMB
           </button>
@@ -198,7 +198,7 @@ export const TowerGame: React.FC<TowerGameProps> = ({
       </div>
 
       {/* Right 9-Floor Vertical Tower Ladder */}
-      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-2xl p-4 sm:p-5 lg:col-span-8">
+      <div className="surface-card order-1 lg:order-2 flex flex-col items-center justify-center rounded-xl p-4 sm:p-5 lg:col-span-8">
         <div className="w-full max-w-[480px] space-y-1.5">
           {floors.map((floorIdx) => {
             const mult = Number((0.99 / Math.pow(safeProb, floorIdx + 1)).toFixed(2));
@@ -211,10 +211,10 @@ export const TowerGame: React.FC<TowerGameProps> = ({
                 <div
                   className={`w-16 text-right font-mono text-[11px] font-bold tabular-nums ${
                     isCurrentRow
-                      ? 'text-[#00E599]'
+                      ? 'text-accent'
                       : pickedCol != null
-                      ? 'text-[#F5B731]'
-                      : 'text-zinc-600'
+                      ? 'text-gold'
+                      : 'text-subtle'
                   }`}
                 >
                   {mult >= 100 ? `${Math.round(mult)}x` : `${mult}x`}
@@ -240,22 +240,22 @@ export const TowerGame: React.FC<TowerGameProps> = ({
                         onClick={() => pickCell(colIdx)}
                         className={`h-10 rounded-xl border flex items-center justify-center transition-all ${
                           isHitBomb
-                            ? 'border-[#FF3B69] bg-[#FF3B69]/25 shadow-[0_0_18px_rgba(255,59,105,0.45)]'
+                            ? 'border-danger bg-danger/25 shadow-[0_0_18px_rgba(255,78,78,0.45)]'
                             : isPickedSafe
-                            ? 'border-[#00E599] bg-[#00E599]/20 shadow-[0_0_14px_rgba(0,229,153,0.3)]'
+                            ? 'border-accent bg-accent/20 shadow-[0_0_14px_rgba(0,200,83,0.3)]'
                             : isRevealedBomb
-                            ? 'border-[#FF3B69]/30 bg-[#FF3B69]/10'
+                            ? 'border-danger/30 bg-danger/10'
                             : isCurrentRow
-                            ? 'border-[#00E599]/50 bg-[#121824] hover:bg-[#192334] hover:border-[#00E599]'
-                            : 'border-white/[0.06] bg-[#080B10]'
+                            ? 'border-accent/50 bg-raised hover:bg-overlay hover:border-accent'
+                            : 'border-fg/[0.06] bg-raised'
                         }`}
                       >
                         {isHitBomb || isRevealedBomb ? (
-                          <Skull className="h-4 w-4 text-[#FF3B69]" />
+                          <Skull className="h-4 w-4 text-danger" />
                         ) : isPickedSafe ? (
-                          <Shield className="h-4 w-4 text-[#00E599]" />
+                          <Shield className="h-4 w-4 text-accent" />
                         ) : isCurrentRow ? (
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#00E599]/70 animate-pulse" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-accent/70 animate-pulse" />
                         ) : null}
                       </button>
                     );

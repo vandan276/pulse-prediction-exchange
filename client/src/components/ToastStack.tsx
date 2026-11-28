@@ -9,25 +9,34 @@ export const ToastStack: React.FC<ToastStackProps> = ({ toasts }) => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-4 left-3 right-3 sm:left-auto sm:right-4 z-50 flex sm:w-full sm:max-w-sm flex-col gap-2">
+    <div className="pointer-events-none fixed bottom-20 left-3 right-3 sm:left-auto sm:right-4 lg:bottom-4 z-[60] flex sm:w-full sm:max-w-sm flex-col gap-2">
       {toasts.map((t) => {
         const accent =
           t.tone === 'emerald'
-            ? 'toast-emerald border-[#00E599]/45 bg-[#06130E]/95 text-emerald-100'
+            ? 'toast-emerald'
             : t.tone === 'rose'
-            ? 'toast-rose border-[#FF3B69]/45 bg-[#19070D]/95 text-rose-100'
+            ? 'toast-rose'
             : t.tone === 'amber'
-            ? 'toast-amber border-[#F5B731]/45 bg-[#171206]/95 text-amber-100'
-            : 'toast-sky border-sky-400/45 bg-[#07111C]/95 text-sky-100';
+            ? 'toast-amber'
+            : 'toast-sky';
+        const bar =
+          t.tone === 'emerald'
+            ? 'bg-accent'
+            : t.tone === 'rose'
+            ? 'bg-danger'
+            : t.tone === 'amber'
+            ? 'bg-gold'
+            : 'bg-info';
 
         return (
           <div
             key={t.id}
-            className={`animate-toast pointer-events-auto rounded-xl border px-4 py-3 shadow-2xl backdrop-blur-xl ${accent}`}
+            className={`animate-toast pointer-events-auto relative overflow-hidden rounded-lg border pl-4 pr-4 py-3 shadow-2xl ${accent}`}
           >
-            <div className="font-display text-xs font-bold">{t.title}</div>
+            <span className={`absolute left-0 top-0 h-full w-1 ${bar}`} />
+            <div className="font-display text-sm font-semibold">{t.title}</div>
             {t.subtitle && (
-              <div className="mt-0.5 text-[11px] opacity-80">{t.subtitle}</div>
+              <div className="mt-0.5 text-xs text-muted">{t.subtitle}</div>
             )}
           </div>
         );

@@ -96,7 +96,7 @@ const DepositQrGraphic: React.FC<{ seed: string }> = ({ seed }) => {
     }
   }
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm inline-block">
+    <div className="rounded-xl border border-slate-200 bg-fg p-2.5 shadow-sm inline-block">
       <svg width="96" height="96" viewBox={`0 0 ${cells} ${cells}`}>
         {bits.map((on, i) =>
           on ? (
@@ -316,9 +316,9 @@ export const CashierModal: React.FC<CashierModalProps> = ({
   };
 
   const railIcon = (rail: PaymentMethod['rail']) => {
-    if (rail === 'CRYPTO') return <Coins className="h-3.5 w-3.5 text-[#00E599]" />;
+    if (rail === 'CRYPTO') return <Coins className="h-3.5 w-3.5 text-accent" />;
     if (rail === 'UPI') return <Smartphone className="h-3.5 w-3.5 text-sky-400" />;
-    if (rail === 'CARD') return <CreditCard className="h-3.5 w-3.5 text-[#F5B731]" />;
+    if (rail === 'CARD') return <CreditCard className="h-3.5 w-3.5 text-gold" />;
     return <Building2 className="h-3.5 w-3.5 text-purple-400" />;
   };
 
@@ -328,31 +328,31 @@ export const CashierModal: React.FC<CashierModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md">
-      <div className="surface-card relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl">
+      <div className="surface-card relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-fg/[0.08] px-5 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00E599]/15 text-[#00E599]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent">
               <Landmark className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-base font-bold text-white">
+                <h2 className="font-display text-base font-bold text-fg">
                   Cashier Gateway
                 </h2>
                 <span
                   className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${
                     isSandbox
-                      ? 'bg-[#F5B731]/15 text-[#F5B731]'
-                      : 'bg-[#00E599]/15 text-[#00E599]'
+                      ? 'bg-gold/15 text-gold'
+                      : 'bg-accent/15 text-accent'
                   }`}
                 >
                   {isSandbox ? 'Sandbox Ready' : `${providerName} LIVE`}
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-400">
+              <p className="text-[11px] text-muted">
                 Available Balance:{' '}
-                <strong className="font-mono text-white">
+                <strong className="font-mono text-fg">
                   {formatUsd(user?.balanceCents ?? 0)}
                 </strong>
               </p>
@@ -361,15 +361,15 @@ export const CashierModal: React.FC<CashierModalProps> = ({
 
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+            className="rounded-lg p-1.5 text-muted transition hover:bg-fg/10 hover:text-fg"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-white/[0.06] px-5 py-2.5">
-          <div className="grid grid-cols-3 gap-1 rounded-xl border border-white/[0.07] bg-[#05070A] p-1">
+        <div className="border-b border-fg/[0.06] px-5 py-2.5">
+          <div className="grid grid-cols-3 gap-1 rounded-xl border border-fg/[0.07] bg-raised p-1">
             <button
               onClick={() => {
                 setTab('deposit');
@@ -377,8 +377,8 @@ export const CashierModal: React.FC<CashierModalProps> = ({
               }}
               className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition ${
                 tab === 'deposit'
-                  ? 'bg-white text-[#040507]'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-fg text-inverse'
+                  : 'text-muted hover:text-fg'
               }`}
             >
               <ArrowDownLeft className="h-3.5 w-3.5" />
@@ -388,8 +388,8 @@ export const CashierModal: React.FC<CashierModalProps> = ({
               onClick={() => setTab('withdraw')}
               className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition ${
                 tab === 'withdraw'
-                  ? 'bg-white text-[#040507]'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-fg text-inverse'
+                  : 'text-muted hover:text-fg'
               }`}
             >
               <ArrowUpRight className="h-3.5 w-3.5" />
@@ -402,8 +402,8 @@ export const CashierModal: React.FC<CashierModalProps> = ({
               }}
               className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition ${
                 tab === 'history'
-                  ? 'bg-white text-[#040507]'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-fg text-inverse'
+                  : 'text-muted hover:text-fg'
               }`}
             >
               <History className="h-3.5 w-3.5" />
@@ -419,7 +419,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
             activeDeposit ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-sm font-bold text-white">
+                  <span className="font-display text-sm font-bold text-fg">
                     {activeDeposit.status === 'COMPLETED'
                       ? 'Deposit Confirmed'
                       : `Send ${formatUsd(activeDeposit.amountCents)} via ${activeDeposit.asset}`}
@@ -427,8 +427,8 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                   <span
                     className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase ${
                       activeDeposit.status === 'COMPLETED'
-                        ? 'bg-[#00E599]/20 text-[#00E599]'
-                        : 'bg-[#F5B731]/20 text-[#F5B731]'
+                        ? 'bg-accent/20 text-accent'
+                        : 'bg-gold/20 text-gold'
                     }`}
                   >
                     {activeDeposit.status}
@@ -436,33 +436,33 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                 </div>
 
                 {activeDeposit.status === 'COMPLETED' ? (
-                  <div className="rounded-2xl border border-[#00E599]/40 bg-[#00E599]/10 p-6 text-center">
-                    <CheckCircle2 className="mx-auto h-10 w-10 text-[#00E599]" />
-                    <div className="mt-2 font-display text-lg font-bold text-white">
+                  <div className="rounded-xl border border-accent/40 bg-accent/10 p-6 text-center">
+                    <CheckCircle2 className="mx-auto h-10 w-10 text-accent" />
+                    <div className="mt-2 font-display text-lg font-bold text-fg">
                       +{formatUsd(activeDeposit.netCents)} Credited
                     </div>
-                    <p className="mt-1 font-mono text-[11px] text-zinc-400 break-all">
+                    <p className="mt-1 font-mono text-[11px] text-muted break-all">
                       TX Ref: {activeDeposit.providerRef}
                     </p>
                     <button
                       onClick={() => setActiveDeposit(null)}
-                      className="mt-4 rounded-xl bg-[#00E599] px-5 py-2 font-display text-xs font-black text-[#040507]"
+                      className="mt-4 rounded-xl bg-accent px-5 py-2 font-display text-xs font-black text-onaccent"
                     >
                       Make Another Deposit
                     </button>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-white/[0.08] bg-[#05070A] p-4 space-y-4">
+                  <div className="rounded-xl border border-fg/[0.08] bg-raised p-4 space-y-4">
                     <div className="flex flex-col sm:flex-row items-center gap-4">
                       <DepositQrGraphic seed={activeDeposit.destination || activeDeposit.id} />
                       <div className="flex-1 space-y-2 w-full">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-subtle">
                           {activeDeposit.rail === 'CRYPTO'
                             ? `${activeDeposit.asset} Deposit Address (${activeDeposit.metadata?.network})`
                             : `${activeDeposit.asset} Gateway Payment Reference`}
                         </div>
-                        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-                          <code className="flex-1 truncate font-mono text-xs font-semibold text-white">
+                        <div className="flex items-center gap-2 rounded-xl border border-fg/10 bg-fg/[0.03] px-3 py-2">
+                          <code className="flex-1 truncate font-mono text-xs font-semibold text-fg">
                             {activeDeposit.destination}
                           </code>
                           <button
@@ -472,19 +472,19 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                               setCopiedAddr(true);
                               setTimeout(() => setCopiedAddr(false), 1600);
                             }}
-                            className="flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] font-bold text-white"
+                            className="flex items-center gap-1 rounded-lg bg-fg/10 px-2 py-1 text-[10px] font-bold text-fg"
                           >
-                            {copiedAddr ? <Check className="h-3 w-3 text-[#00E599]" /> : <Copy className="h-3 w-3" />}
+                            {copiedAddr ? <Check className="h-3 w-3 text-accent" /> : <Copy className="h-3 w-3" />}
                             {copiedAddr ? 'Copied' : 'Copy'}
                           </button>
                         </div>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-zinc-400">Order Reference</span>
-                          <span className="font-mono font-bold text-white">{activeDeposit.providerRef}</span>
+                          <span className="text-muted">Order Reference</span>
+                          <span className="font-mono font-bold text-fg">{activeDeposit.providerRef}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-zinc-400">Net Credit</span>
-                          <span className="font-mono font-bold text-[#00E599]">
+                          <span className="text-muted">Net Credit</span>
+                          <span className="font-mono font-bold text-accent">
                             {formatUsd(activeDeposit.netCents)} (0% fee)
                           </span>
                         </div>
@@ -492,18 +492,18 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                     </div>
 
                     {activeDeposit.provider === 'usdtautopay' && (
-                      <div className="rounded-xl border border-[#00E599]/25 bg-[#00E599]/[0.06] px-3 py-2 text-xs flex items-center justify-between">
-                        <span className="text-zinc-300 font-medium">
+                      <div className="rounded-xl border border-accent/25 bg-accent/[0.06] px-3 py-2 text-xs flex items-center justify-between">
+                        <span className="text-fg2 font-medium">
                           BSC Mainnet Confirmations
                         </span>
-                        <span className="font-mono font-bold text-[#00E599]">
+                        <span className="font-mono font-bold text-accent">
                           {activeDeposit.metadata?.confirmations ?? 0} /{' '}
                           {activeDeposit.metadata?.requiredConfirmations ?? 15}
                         </span>
                       </div>
                     )}
 
-                    <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/[0.06]">
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-fg/[0.06]">
                       {activeDeposit.provider === 'usdtautopay' ? (
                         <>
                           {activeDeposit.metadata?.checkoutUrl && (
@@ -511,7 +511,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                               href={activeDeposit.metadata.checkoutUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3 font-display text-xs font-black text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.35)] transition hover:brightness-110"
+                              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3 font-display text-xs font-black text-onaccent shadow-[0_0_24px_rgba(0,200,83,0.35)] transition hover:brightness-110"
                             >
                               Open USDTautopay Checkout
                               <ExternalLink className="h-3.5 w-3.5" />
@@ -526,7 +526,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                                 activeDeposit.metadata?.sessionId || activeDeposit.providerRef
                               )
                             }
-                            className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 px-4 py-3 text-xs font-bold text-white hover:bg-white/[0.06]"
+                            className="flex items-center justify-center gap-1.5 rounded-xl border border-fg/15 px-4 py-3 text-xs font-bold text-fg hover:bg-fg/[0.06]"
                           >
                             <RefreshCw className="h-3.5 w-3.5" />
                             Sync Status
@@ -536,7 +536,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                         <button
                           disabled={busy}
                           onClick={confirmSandboxDeposit}
-                          className="flex-1 rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3 font-display text-xs font-black text-[#040507] shadow-[0_0_24px_rgba(0,229,153,0.35)] transition hover:brightness-110 disabled:opacity-50"
+                          className="flex-1 rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3 font-display text-xs font-black text-onaccent shadow-[0_0_24px_rgba(0,200,83,0.35)] transition hover:brightness-110 disabled:opacity-50"
                         >
                           {busy
                             ? 'Confirming...'
@@ -546,7 +546,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveDeposit(null)}
-                        className="rounded-xl border border-white/10 px-4 py-3 text-xs font-bold text-zinc-400 hover:text-white"
+                        className="rounded-xl border border-fg/10 px-4 py-3 text-xs font-bold text-muted hover:text-fg"
                       >
                         Back
                       </button>
@@ -557,7 +557,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
             ) : (
               <form onSubmit={createDeposit} className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                  <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-subtle">
                     Select Payment Rail
                   </label>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -570,26 +570,26 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                           onClick={() => setSelectedAsset(m.id)}
                           className={`rounded-xl border p-2.5 text-left transition ${
                             active
-                              ? 'border-[#00E599] bg-[#00E599]/10'
-                              : 'border-white/[0.07] bg-[#05070A] hover:border-white/20'
+                              ? 'border-accent bg-accent/10'
+                              : 'border-fg/[0.07] bg-raised hover:border-fg/20'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             {railIcon(m.rail)}
                             {m.liveGateway && !isSandbox ? (
-                              <span className="rounded bg-[#00E599]/20 px-1.5 py-0.2 font-mono text-[9px] font-black text-[#00E599]">
+                              <span className="rounded bg-accent/20 px-1.5 py-0.2 font-mono text-[9px] font-black text-accent">
                                 LIVE
                               </span>
                             ) : (
-                              <span className="font-mono text-[9px] text-zinc-500">
+                              <span className="font-mono text-[9px] text-subtle">
                                 {m.eta}
                               </span>
                             )}
                           </div>
-                          <div className="mt-1.5 text-xs font-bold text-white truncate">
+                          <div className="mt-1.5 text-xs font-bold text-fg truncate">
                             {m.label}
                           </div>
-                          <div className="text-[10px] text-zinc-500 truncate">
+                          <div className="text-[10px] text-subtle truncate">
                             {m.network}
                           </div>
                         </button>
@@ -600,17 +600,17 @@ export const CashierModal: React.FC<CashierModalProps> = ({
 
                 <div>
                   <div className="mb-1.5 flex items-center justify-between text-xs">
-                    <label className="font-semibold text-zinc-400">
+                    <label className="font-semibold text-muted">
                       Deposit Amount (USD)
                     </label>
                     {activeMethod && (
-                      <span className="font-mono text-[10px] text-zinc-500">
+                      <span className="font-mono text-[10px] text-subtle">
                         No Minimum · 0% Fee
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center rounded-xl border border-white/15 bg-[#05070A] px-3">
-                    <span className="font-mono text-base font-bold text-[#00E599]">$</span>
+                  <div className="flex items-center rounded-xl border border-fg/15 bg-raised px-3">
+                    <span className="font-mono text-base font-bold text-accent">$</span>
                     <input
                       type="number"
                       min="0.01"
@@ -618,7 +618,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                       required
                       value={depositDollars}
                       onChange={(e) => setDepositDollars(e.target.value)}
-                      className="w-full bg-transparent px-2 py-2.5 font-mono text-base font-bold text-white outline-none tabular-nums"
+                      className="w-full bg-transparent px-2 py-2.5 font-mono text-base font-bold text-fg outline-none tabular-nums"
                     />
                   </div>
                   <div className="mt-2 grid grid-cols-5 gap-1.5">
@@ -627,7 +627,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                         key={v}
                         type="button"
                         onClick={() => setDepositDollars(String(v))}
-                        className="rounded-lg border border-white/[0.07] bg-white/[0.02] py-1.5 font-mono text-xs font-bold text-zinc-300 hover:border-white/20 hover:text-white"
+                        className="rounded-lg border border-fg/[0.07] bg-fg/[0.02] py-1.5 font-mono text-xs font-bold text-fg2 hover:border-fg/20 hover:text-fg"
                       >
                         ${v}
                       </button>
@@ -638,15 +638,15 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                 <button
                   type="submit"
                   disabled={busy}
-                  className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_26px_rgba(0,229,153,0.35)] transition hover:brightness-110 disabled:opacity-50"
+                  className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_26px_rgba(0,200,83,0.35)] transition hover:brightness-110 disabled:opacity-50"
                 >
                   {busy
                     ? 'Generating Gateway Checkout...'
                     : `Continue to Deposit $${depositDollars || '0'}`}
                 </button>
 
-                <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-[#05070A] px-3 py-2 text-[11px] text-zinc-400">
-                  <ShieldCheck className="h-4 w-4 shrink-0 text-[#00E599]" />
+                <div className="flex items-center gap-2 rounded-xl border border-fg/[0.06] bg-raised px-3 py-2 text-[11px] text-muted">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-accent" />
                   <span>
                     {!isSandbox
                       ? 'Live USDTautopay gateway connected — deposits credit automatically after BSC confirmation.'
@@ -661,7 +661,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
           {tab === 'withdraw' && (
             <form onSubmit={submitWithdrawal} className="space-y-4">
               <div>
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-subtle">
                   Select Payout Rail
                 </label>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -674,20 +674,20 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                         onClick={() => setSelectedAsset(m.id)}
                         className={`rounded-xl border p-2.5 text-left transition ${
                           active
-                            ? 'border-[#00E599] bg-[#00E599]/10'
-                            : 'border-white/[0.07] bg-[#05070A] hover:border-white/20'
+                            ? 'border-accent bg-accent/10'
+                            : 'border-fg/[0.07] bg-raised hover:border-fg/20'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           {railIcon(m.rail)}
-                          <span className="font-mono text-[9px] text-zinc-500">
+                          <span className="font-mono text-[9px] text-subtle">
                             Fee {formatUsd(m.withdrawFeeFlatCents)}
                           </span>
                         </div>
-                        <div className="mt-1.5 text-xs font-bold text-white truncate">
+                        <div className="mt-1.5 text-xs font-bold text-fg truncate">
                           {m.label}
                         </div>
-                        <div className="text-[10px] text-zinc-500 truncate">
+                        <div className="text-[10px] text-subtle truncate">
                           {m.network}
                         </div>
                       </button>
@@ -697,7 +697,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-zinc-400">
+                <label className="mb-1.5 block text-xs font-semibold text-muted">
                   Destination ({activeMethod?.label})
                 </label>
                 <input
@@ -706,13 +706,13 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder={activeMethod?.placeholder || 'Wallet address / UPI ID / Account'}
-                  className="w-full rounded-xl border border-white/15 bg-[#05070A] px-3.5 py-2.5 font-mono text-xs text-white placeholder-zinc-500 outline-none focus:border-[#00E599]"
+                  className="w-full rounded-xl border border-fg/15 bg-raised px-3.5 py-2.5 font-mono text-xs text-fg placeholder-subtle outline-none focus:border-accent"
                 />
               </div>
 
               <div>
                 <div className="mb-1.5 flex items-center justify-between text-xs">
-                  <label className="font-semibold text-zinc-400">
+                  <label className="font-semibold text-muted">
                     Withdraw Amount (USD)
                   </label>
                   <div className="flex gap-1.5">
@@ -724,15 +724,15 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                           const v = Math.floor(((user?.balanceCents ?? 0) * frac)) / 100;
                           setWithdrawDollars(v.toFixed(2).replace(/\.00$/, ''));
                         }}
-                        className="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[10px] font-bold text-zinc-300 hover:text-white"
+                        className="rounded bg-fg/[0.06] px-2 py-0.5 font-mono text-[10px] font-bold text-fg2 hover:text-fg"
                       >
                         {frac === 1 ? 'MAX' : `${frac * 100}%`}
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="flex items-center rounded-xl border border-white/15 bg-[#05070A] px-3">
-                  <span className="font-mono text-base font-bold text-[#00E599]">$</span>
+                <div className="flex items-center rounded-xl border border-fg/15 bg-raised px-3">
+                  <span className="font-mono text-base font-bold text-accent">$</span>
                   <input
                     type="number"
                     min="0.01"
@@ -740,27 +740,27 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                     required
                     value={withdrawDollars}
                     onChange={(e) => setWithdrawDollars(e.target.value)}
-                    className="w-full bg-transparent px-2 py-2.5 font-mono text-base font-bold text-white outline-none tabular-nums"
+                    className="w-full bg-transparent px-2 py-2.5 font-mono text-base font-bold text-fg outline-none tabular-nums"
                   />
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/[0.06] bg-[#05070A] p-3 text-xs space-y-1.5">
+              <div className="rounded-xl border border-fg/[0.06] bg-raised p-3 text-xs space-y-1.5">
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">Requested Amount</span>
-                  <span className="font-mono font-bold text-white tabular-nums">
+                  <span className="text-muted">Requested Amount</span>
+                  <span className="font-mono font-bold text-fg tabular-nums">
                     {formatUsd(withdrawAmountCents)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">Network / Gateway Fee</span>
-                  <span className="font-mono font-semibold text-[#F5B731] tabular-nums">
+                  <span className="text-muted">Network / Gateway Fee</span>
+                  <span className="font-mono font-semibold text-gold tabular-nums">
                     -{formatUsd(withdrawFee)}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-white/[0.06] pt-1.5">
-                  <span className="font-bold text-white">Net You Receive</span>
-                  <span className="font-mono font-extrabold text-[#00E599] tabular-nums">
+                <div className="flex justify-between border-t border-fg/[0.06] pt-1.5">
+                  <span className="font-bold text-fg">Net You Receive</span>
+                  <span className="font-mono font-extrabold text-accent tabular-nums">
                     {formatUsd(withdrawNet)}
                   </span>
                 </div>
@@ -769,7 +769,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
               <button
                 type="submit"
                 disabled={busy || !user || withdrawAmountCents > (user?.balanceCents ?? 0)}
-                className="w-full rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] py-3.5 font-display text-sm font-black text-[#040507] shadow-[0_0_26px_rgba(0,229,153,0.35)] transition hover:brightness-110 disabled:opacity-40"
+                className="w-full rounded-xl bg-gradient-to-b from-accent to-accentdeep py-3.5 font-display text-sm font-black text-onaccent shadow-[0_0_26px_rgba(0,200,83,0.35)] transition hover:brightness-110 disabled:opacity-40"
               >
                 {busy ? 'Dispatching Payout...' : `Withdraw ${formatUsd(withdrawAmountCents)}`}
               </button>
@@ -779,7 +779,7 @@ export const CashierModal: React.FC<CashierModalProps> = ({
           {/* ==================== TRANSACTIONS TAB ==================== */}
           {tab === 'history' && (
             transactions.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 py-12 text-center text-xs text-zinc-500">
+              <div className="rounded-xl border border-dashed border-fg/10 py-12 text-center text-xs text-subtle">
                 No deposits or withdrawals yet. Start a deposit or withdrawal to see your live ledger.
               </div>
             ) : (
@@ -787,13 +787,13 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                 {transactions.map((tx) => (
                   <div
                     key={tx.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/[0.07] bg-[#05070A] px-3.5 py-3"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-fg/[0.07] bg-raised px-3.5 py-3"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                           tx.type === 'DEPOSIT'
-                            ? 'bg-[#00E599]/15 text-[#00E599]'
+                            ? 'bg-accent/15 text-accent'
                             : 'bg-sky-500/15 text-sky-400'
                         }`}
                       >
@@ -805,23 +805,23 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-white">
+                          <span className="text-xs font-bold text-fg">
                             {tx.type === 'DEPOSIT' ? 'Deposit' : 'Withdrawal'} · {tx.asset}
                           </span>
                           <span
                             className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.2 font-mono text-[9px] font-bold uppercase ${
                               tx.status === 'COMPLETED'
-                                ? 'bg-[#00E599]/15 text-[#00E599]'
+                                ? 'bg-accent/15 text-accent'
                                 : tx.status === 'PROCESSING' || tx.status === 'PENDING'
-                                ? 'bg-[#F5B731]/15 text-[#F5B731]'
-                                : 'bg-[#FF3B69]/15 text-[#FF3B69]'
+                                ? 'bg-gold/15 text-gold'
+                                : 'bg-danger/15 text-danger'
                             }`}
                           >
                             {tx.status === 'PROCESSING' && <Clock className="h-2.5 w-2.5" />}
                             {tx.status}
                           </span>
                         </div>
-                        <div className="mt-0.5 font-mono text-[10px] text-zinc-500 truncate max-w-[300px]">
+                        <div className="mt-0.5 font-mono text-[10px] text-subtle truncate max-w-[300px]">
                           {formatTimeShort(tx.createdAt)} · Ref: {tx.providerRef}
                         </div>
                       </div>
@@ -830,14 +830,14 @@ export const CashierModal: React.FC<CashierModalProps> = ({
                     <div className="text-right font-mono tabular-nums">
                       <div
                         className={`text-xs font-extrabold ${
-                          tx.type === 'DEPOSIT' ? 'text-[#00E599]' : 'text-white'
+                          tx.type === 'DEPOSIT' ? 'text-accent' : 'text-fg'
                         }`}
                       >
                         {tx.type === 'DEPOSIT' ? '+' : '-'}
                         {formatUsd(tx.amountCents)}
                       </div>
                       {tx.feeCents > 0 && (
-                        <div className="text-[10px] text-zinc-500">
+                        <div className="text-[10px] text-subtle">
                           Net {formatUsd(tx.netCents)}
                         </div>
                       )}
