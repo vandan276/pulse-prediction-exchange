@@ -360,22 +360,47 @@ export const OriginalsHub: React.FC<OriginalsHubProps> = ({
             </div>
           </div>
 
-          {/* 9-Game Flagship Card Grid */}
+          {/* 10-Game Flagship Card Grid */}
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
             {GAMES.map((g) => (
               <button
                 key={g.id}
                 onClick={() => setActiveGame(g.id)}
-                className={`orig-card group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br ${g.gradient} p-5 text-left transition-all hover:-translate-y-1 hover:border-white/25 hover:shadow-2xl`}
+                style={{
+                  background: `linear-gradient(135deg, ${g.accent}33 0%, ${g.accent}10 100%)`,
+                  borderColor: `${g.accent}45`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `0 14px 40px -12px ${g.accent}88`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '';
+                }}
+                className="orig-card group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200 hover:-translate-y-1.5"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-[#05070A]/80 shadow-inner">
+                {/* Large subtle watermark icon */}
+                {React.isValidElement(g.icon) && (
+                  <div
+                    className="pointer-events-none absolute -bottom-4 -right-4 opacity-10 transition-transform duration-300 group-hover:scale-110"
+                    style={{ color: g.accent }}
+                  >
+                    {React.cloneElement(g.icon as React.ReactElement<{ className?: string }>, {
+                      className: 'h-24 w-24',
+                    })}
+                  </div>
+                )}
+
+                <div className="relative z-10 flex items-start justify-between gap-3">
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-[#05070A]/80 shadow-inner"
+                    style={{ boxShadow: `0 0 20px -6px ${g.accent}66` }}
+                  >
                     {g.icon}
                   </div>
                   <span
                     className="rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider"
                     style={{
-                      backgroundColor: `${g.accent}1F`,
+                      backgroundColor: `${g.accent}24`,
                       color: g.accent,
                     }}
                   >
@@ -383,19 +408,25 @@ export const OriginalsHub: React.FC<OriginalsHubProps> = ({
                   </span>
                 </div>
 
-                <h3 className="mt-4 font-display text-lg font-bold text-white group-hover:text-[#00E599] transition-colors">
+                <h3 className="relative z-10 mt-4 font-display text-lg font-bold text-white group-hover:text-[#00E599] transition-colors">
                   {g.name}
                 </h3>
-                <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                <p className="relative z-10 mt-1 text-xs leading-relaxed text-zinc-400">
                   {g.tagline}
                 </p>
 
-                <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3 font-mono text-[11px]">
+                <div className="relative z-10 mt-4 flex items-center justify-between border-t border-white/[0.08] pt-3 font-mono text-[11px]">
                   <span className="text-zinc-500">
                     Max Win <strong className="text-white">{g.maxMult}</strong>
                   </span>
-                  <span className="font-bold text-[#00E599] group-hover:translate-x-0.5 transition-transform">
-                    Play Now →
+                  <span
+                    className="rounded-full px-2.5 py-1 font-display text-[10px] font-black tracking-wide transition-transform group-hover:translate-x-0.5"
+                    style={{
+                      backgroundColor: `${g.accent}28`,
+                      color: g.accent,
+                    }}
+                  >
+                    PLAY →
                   </span>
                 </div>
               </button>

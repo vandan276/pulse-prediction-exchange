@@ -211,13 +211,60 @@ html.light .toast-sky {
 
 /* Originals Lobby Game Cards in Light Mode */
 html.light .orig-card {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04), 0 12px 24px -16px rgba(15, 23, 42, 0.09);
+  background-color: #ffffff;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05), 0 12px 26px -14px rgba(15, 23, 42, 0.12);
 }
 html.light .orig-card:hover {
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 16px 34px -16px rgba(15, 23, 42, 0.14);
+  border-color: #94a3b8 !important;
+  box-shadow: 0 18px 36px -14px rgba(15, 23, 42, 0.18);
+}
+
+/* Live Wins Ticker Bar */
+.live-wins-bar {
+  background: linear-gradient(90deg, #0b0e14 0%, #151026 50%, #0b0e14 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+html.light .live-wins-bar {
+  background: linear-gradient(90deg, #f8fafc 0%, #eefdf7 50%, #fdf8eb 100%) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 42s linear infinite;
+}
+.marquee-wrap:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Casino CTA Pulse Glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(0, 229, 153, 0.35), 0 8px 22px -8px rgba(0, 229, 153, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(0, 229, 153, 0.6), 0 10px 30px -6px rgba(0, 229, 153, 0.65);
+  }
+}
+
+.btn-glow {
+  animation: pulseGlow 2.6s ease-in-out infinite;
+}
+
+@keyframes fadeUpSlow {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUpSlow 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Price Tick Flash Animations */

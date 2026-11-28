@@ -41,6 +41,8 @@ import { LeaderboardView } from './components/LeaderboardView';
 import { OriginalsHub } from './components/originals/OriginalsHub';
 import { CashierModal } from './components/CashierModal';
 import { AuthModal, AuthModalMode } from './components/AuthModal';
+import { LandingPage } from './components/LandingPage';
+import { LiveWinsTicker } from './components/LiveWinsTicker';
 import { ToastStack } from './components/ToastStack';
 import { getStandaloneRuntime, isStandaloneMode } from './standalone/liveRuntime';
 
@@ -74,12 +76,11 @@ export default function App() {
     const saved = localStorage.getItem('pulse_theme');
     return saved === 'dark' ? 'dark' : 'light';
   });
-
-  useEffect(() => {
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-    localStorage.setItem('pulse_theme', theme);
-  }, [theme]);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [showLanding, setShowLanding] = useState(
+    () => sessionStorage.getItem('pulse_entered') !== '1'
+  );
+  const [landingForced, setLandingForced] = useState(false);
 
   const [tickers, setTickers] = useState<MarketTicker[]>([]);
   const [timeframes, setTimeframes] = useState<TimeframeOption[]>(DEFAULT_TIMEFRAMES);
@@ -114,6 +115,15 @@ export default function App() {
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   const clockOffsetRef = useRef<number>(0);
   const lastPriceRef = useRef<number | null>(null);
+
+  const landingVisible = authChecked && showLanding && (!user || landingForced);
+
+  useEffect(() => {
+    const effectiveTheme = landingVisible ? 'dark' : theme;
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(effectiveTheme);
+    localStorage.setItem('pulse_theme', theme);
+  }, [theme, landingVisible]);
 
   const socketRef = useRef<Socket | null>(null);
   const selectedSymbolRef = useRef<string>(selectedSymbol);
@@ -174,6 +184,20 @@ export default function App() {
     setAuthModalOpen(true);
   }, []);
 
+  const enterApp = useCallback((tab?: AppTab) => {
+    sessionStorage.setItem('pulse_entered', '1');
+    setShowLanding(false);
+    setLandingForced(false);
+    if (tab) setActiveTab(tab);
+    window.scrollTo(0, 0);
+  }, []);
+
+  const openLanding = useCallback(() => {
+    setShowLanding(true);
+    setLandingForced(true);
+    window.scrollTo(0, 0);
+  }, []);
+
   const applyAuthenticatedSession = useCallback(
     (nextUser: UserProfile, token?: string) => {
       setUser(nextUser);
@@ -182,6 +206,9 @@ export default function App() {
       }
       localStorage.setItem('pulsepredict_user_id', nextUser.id);
       localStorage.setItem('pulsepredict_username', nextUser.username);
+      sessionStorage.setItem('pulse_entered', '1');
+      setShowLanding(false);
+      setLandingForced(false);
       socketRef.current?.emit('user:identify', { userId: nextUser.id });
       fetchUserBets(nextUser.id);
     },
@@ -244,6 +271,8 @@ export default function App() {
     localStorage.removeItem('pulse_auth_token');
     localStorage.removeItem('pulsepredict_user_id');
     localStorage.removeItem('pulsepredict_username');
+    sessionStorage.setItem('pulse_entered', '1');
+    setLandingForced(false);
     setUser(null);
     setUserBets([]);
     socketRef.current?.emit('user:identify', { userId: null });
@@ -300,6 +329,8 @@ export default function App() {
         }
       } catch {
         // stay logged out until user signs in
+      } finally {
+        if (active) setAuthChecked(true);
       }
     })();
 
@@ -658,6 +689,63 @@ export default function App() {
   const livePrice = currentTicker?.price ?? roomSnapshot?.currentPrice ?? 0;
   const decimals = currentTicker?.decimals ?? 2;
 
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#07050F]">
+        <div className="flex flex-col items-center gap-3 animate-pulse">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#00E599] shadow-[0_0_32px_rgba(0,229,153,0.45)]">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-6 w-6 text-[#040507]"
+              stroke="currentColor"
+              strokeWidth="2.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="22 12 18 12 15 20 9 4 6 12 2 12" />
+            </svg>
+          </div>
+          <span className="font-display text-sm font-bold tracking-widest text-white">
+            PULSE EXCHANGE
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (landingVisible) {
+    return (
+      <>
+        <LandingPage
+          tickers={tickers}
+          globalStats={globalStats}
+          masterWallet={masterWallet}
+          onSignUp={() => openAuthModal('signup')}
+          onSignIn={() => openAuthModal('login')}
+          onEnterApp={enterApp}
+          theme={theme}
+          isLoggedIn={Boolean(user)}
+        />
+        <AuthModal
+          isOpen={authModalOpen}
+          initialMode={authModalMode}
+          onClose={() => setAuthModalOpen(false)}
+          currentUser={user}
+          onSignIn={handleSignIn}
+          onSignUp={handleSignUp}
+          onLogout={handleLogout}
+          onOpenCashier={(tab) => {
+            enterApp('arena');
+            setCashierTab(tab);
+            setCashierOpen(true);
+          }}
+        />
+        <ToastStack toasts={toasts} />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-[#040507]">
       <TopNav
@@ -676,11 +764,18 @@ export default function App() {
           setCashierTab(tab);
           setCashierOpen(true);
         }}
+        onOpenLanding={openLanding}
         onTopUp={handleTopUp}
         onToggleBots={handleToggleBots}
         topUpBusy={topUpBusy}
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+      />
+
+      <LiveWinsTicker
+        originalsRecentBets={originalsRecentBets}
+        globalRounds={globalRounds}
+        lastSettled={roomSnapshot?.lastSettled ?? null}
       />
 
       {activeTab === 'arena' && (

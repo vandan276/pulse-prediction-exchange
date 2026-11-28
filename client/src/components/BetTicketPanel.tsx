@@ -298,7 +298,7 @@ export const BetTicketPanel: React.FC<BetTicketPanelProps> = ({
             <button
               disabled={placing || insufficientBalance}
               onClick={() => onPlaceBet('UP')}
-              className="group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] px-3 py-3.5 text-[#040507] shadow-[0_10px_28px_-8px_rgba(0,229,153,0.55)] ring-1 ring-white/25 transition hover:brightness-110 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-40"
+              className="btn-glow group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-[#00F0A0] to-[#00C480] px-3 py-3.5 text-[#040507] shadow-[0_10px_28px_-8px_rgba(0,229,153,0.55)] ring-1 ring-white/25 transition hover:brightness-110 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <div className="flex items-center gap-1 font-display text-sm font-bold tracking-tight">
                 <ArrowUp className="h-4 w-4 stroke-[3]" />
@@ -312,7 +312,7 @@ export const BetTicketPanel: React.FC<BetTicketPanelProps> = ({
             <button
               disabled={placing || insufficientBalance}
               onClick={() => onPlaceBet('DOWN')}
-              className="group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-[#FF4774] to-[#E11D48] px-3 py-3.5 text-white shadow-[0_10px_28px_-8px_rgba(255,59,105,0.5)] ring-1 ring-white/20 transition hover:brightness-110 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-40"
+              className="btn-glow group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-[#FF4774] to-[#E11D48] px-3 py-3.5 text-white shadow-[0_10px_28px_-8px_rgba(255,59,105,0.5)] ring-1 ring-white/20 transition hover:brightness-110 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <div className="flex items-center gap-1 font-display text-sm font-bold tracking-tight">
                 <ArrowDown className="h-4 w-4 stroke-[3]" />

@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Bot,
   Gamepad2,
+  HelpCircle,
   Landmark,
   LogIn,
   Moon,
@@ -24,6 +25,7 @@ interface TopNavProps {
   user: UserProfile | null;
   onOpenAuthModal: (mode: 'login' | 'signup') => void;
   onOpenCashier: (tab: 'deposit' | 'withdraw') => void;
+  onOpenLanding: () => void;
   onTopUp: () => void;
   onToggleBots: () => void;
   topUpBusy: boolean;
@@ -40,6 +42,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   user,
   onOpenAuthModal,
   onOpenCashier,
+  onOpenLanding,
   onToggleBots,
   theme,
   onToggleTheme,
@@ -174,8 +177,16 @@ export const TopNav: React.FC<TopNavProps> = ({
           </button>
         </nav>
 
-        {/* Right: Theme Toggle + Demo Bot Toggle + Luxury Wallet Pill */}
+        {/* Right: Help (?) + Theme Toggle + Demo Bot Toggle + Luxury Wallet Pill */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <button
+            onClick={onOpenLanding}
+            title="How it works"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-400 transition hover:text-white"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+          </button>
+
           <button
             onClick={onToggleTheme}
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
@@ -210,7 +221,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               <button
                 onClick={() => onOpenCashier('deposit')}
                 title="Open Deposit & Withdrawal Gateway"
-                className="flex h-6 items-center gap-0.5 sm:gap-1 rounded-full bg-[#00E599] px-2 sm:px-2.5 font-display text-[10px] sm:text-[11px] font-extrabold text-[#040507] transition hover:brightness-110"
+                className="btn-glow flex h-6 items-center gap-0.5 sm:gap-1 rounded-full bg-[#00E599] px-2 sm:px-2.5 font-display text-[10px] sm:text-[11px] font-extrabold text-[#040507] transition hover:brightness-110"
               >
                 <Plus className="h-3 w-3 stroke-[3]" />
                 <span className="hidden xs:inline sm:inline">Deposit</span>
@@ -244,7 +255,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               </button>
               <button
                 onClick={() => onOpenAuthModal('signup')}
-                className="flex items-center gap-1 rounded-full bg-[#00E599] px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-[#040507] shadow-[0_0_20px_rgba(0,229,153,0.3)] transition hover:brightness-110"
+                className="btn-glow flex items-center gap-1 rounded-full bg-[#00E599] px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-[#040507] transition hover:brightness-110"
               >
                 <UserPlus className="h-3.5 w-3.5" />
                 <span>Sign Up</span>
