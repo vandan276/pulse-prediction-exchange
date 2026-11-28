@@ -506,18 +506,22 @@ class StandaloneRuntime {
   }
 
   _connectBinanceBrowser() {
-    // 1. Immediate REST snapshot so live Binance prices anchor right on page load (no $95k -> $62k cliff)
-    try {
-      const syms = MARKETS_DEF.filter((m) => m.binanceSymbol).map((m) =>
-        m.binanceSymbol!.toUpperCase()
-      );
-      const restUrl = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(
-        JSON.stringify(syms)
-      )}`;
-      fetch(restUrl)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((list) => {
-          if (!Array.isArray(list)) return;
+    const syms = MARKETS_DEF.filter((m) => m.binanceSymbol).map((m) =>
+      m.binanceSymbol!.toUpperCase()
+    );
+    const encodedSyms = encodeURIComponent(JSON.stringify(syms));
+    const restEndpoints = [
+      `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodedSyms}`,
+      `https://data-api.binance.vision/api/v3/ticker/24hr?symbols=${encodedSyms}`,
+    ];
+
+    const pollRestSnapshot = async () => {
+      for (const restUrl of restEndpoints) {
+        try {
+          const r = await fetch(restUrl);
+          if (!r.ok) continue;
+          const list = await r.json();
+          if (!Array.isArray(list)) continue;
           for (const d of list) {
             const m = MARKETS_DEF.find((x) => x.binanceSymbol?.toUpperCase() === d.symbol);
             if (!m) continue;
@@ -530,15 +534,19 @@ class StandaloneRuntime {
               parseFloat(d.priceChangePercent)
             );
           }
-        })
-        .catch(() => {
-          // WebSocket will still sync
-        });
-    } catch {
-      // ignore
-    }
+          return true;
+        } catch {
+          // Try next endpoint
+        }
+      }
+      return false;
+    };
 
-    // 2. Real-time WebSocket stream
+    // 1. Immediate REST snapshot so live Binance prices anchor right on page load
+    pollRestSnapshot();
+
+    // 2. Real-time WebSocket stream (with automatic REST poll fallback if WS is geo-blocked)
+    let wsHealthy = false;
     try {
       const streams = MARKETS_DEF.filter((m) => m.binanceSymbol)
         .map((m) => `${m.binanceSymbol}@ticker`)
@@ -549,6 +557,7 @@ class StandaloneRuntime {
           const msg = JSON.parse(ev.data);
           const d = msg.data;
           if (!d?.s) return;
+          wsHealthy = true;
           const m = MARKETS_DEF.find((x) => x.binanceSymbol?.toUpperCase() === d.s);
           if (!m) return;
           this._applyLiveBinanceTick(
@@ -564,8 +573,15 @@ class StandaloneRuntime {
         }
       };
     } catch {
-      // fallback sim handles it
+      // fallback REST polling below handles it
     }
+
+    // Keep live prices fresh via Binance Vision REST if WebSocket is blocked/unavailable
+    setInterval(() => {
+      if (!wsHealthy) {
+        pollRestSnapshot();
+      }
+    }, 4500);
   }
 
   _newCrashRound(num: number): CrashState {

@@ -18,7 +18,6 @@ import {
   MasterWalletSummary,
   OriginalBetRecord,
   OriginalGameId,
-  PricePoint,
   RoomSnapshot,
   SettledRound,
   StakeTier,
@@ -29,6 +28,11 @@ import {
   UserProfile,
 } from './types';
 import { formatPrice, formatUsd } from './utils/format';
+import {
+  fetchTimeframeCandles,
+  getCachedTimeframeCandles,
+  patchCandlesWithLiveTick,
+} from './utils/marketKlines';
 import { TopNav } from './components/TopNav';
 import { MarketRail } from './components/MarketRail';
 import { PriceChart } from './components/PriceChart';
@@ -53,8 +57,6 @@ const STANDALONE = isStandaloneMode();
 if (STANDALONE) {
   getStandaloneRuntime();
 }
-
-const CANDLE_BUCKET_MS = 5_000;
 
 const DEFAULT_TIMEFRAMES: TimeframeOption[] = [
   { id: '1m', label: '1 Min', shortLabel: '1m', durationMs: 60_000, entryCutoffMs: 15_000 },
@@ -142,8 +144,20 @@ export default function App() {
   const [selectedTierCents, setSelectedTierCents] = useState<number>(1000);
   const [chartMode, setChartMode] = useState<ChartMode>('candles');
 
-  const [priceHistory, setPriceHistory] = useState<PricePoint[]>([]);
-  const [candles, setCandles] = useState<CandlePoint[]>([]);
+  const [chartSeries, setChartSeries] = useState<{
+    symbol: string;
+    timeframe: TimeframeId;
+    candles: CandlePoint[];
+    source: 'binance' | 'synthetic';
+    version: number;
+  }>({
+    symbol: 'BTC/USDT',
+    timeframe: '1m',
+    candles: [],
+    source: 'synthetic',
+    version: 0,
+  });
+  const [chartLoading, setChartLoading] = useState<boolean>(false);
   const [priceFlash, setPriceFlash] = useState<'up' | 'down' | null>(null);
   const [roomSnapshot, setRoomSnapshot] = useState<RoomSnapshot | null>(null);
   const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null);
@@ -192,12 +206,23 @@ export default function App() {
 
   const socketRef = useRef<Socket | null>(null);
   const selectedSymbolRef = useRef<string>(selectedSymbol);
+  const selectedTimeframeRef = useRef<TimeframeId>(selectedTimeframe);
+  const tickersRef = useRef<MarketTicker[]>(tickers);
+  const chartFetchSeqRef = useRef<number>(0);
   const userRef = useRef<UserProfile | null>(user);
 
   useEffect(() => {
     selectedSymbolRef.current = selectedSymbol;
     lastPriceRef.current = null;
   }, [selectedSymbol]);
+
+  useEffect(() => {
+    selectedTimeframeRef.current = selectedTimeframe;
+  }, [selectedTimeframe]);
+
+  useEffect(() => {
+    tickersRef.current = tickers;
+  }, [tickers]);
 
   useEffect(() => {
     userRef.current = user;
@@ -449,62 +474,27 @@ export default function App() {
         }
         lastPriceRef.current = match.price;
 
-        setPriceHistory((prev) => {
-          const lastPt = prev[prev.length - 1];
-          const baseList =
-            lastPt && lastPt.price > 0 && Math.abs(match.price - lastPt.price) / lastPt.price > 0.08
-              ? prev.map((pt) => ({ ...pt, price: pt.price * (match.price / lastPt.price) }))
-              : prev;
-          const next = [...baseList, { time: serverTime, price: match.price }];
-          return next.length > 220 ? next.slice(-220) : next;
-        });
-
-        setCandles((prev) => {
-          const bucket = Math.floor(serverTime / CANDLE_BUCKET_MS) * CANDLE_BUCKET_MS;
-          if (prev.length === 0) {
-            return [
-              {
-                time: bucket,
-                open: match.price,
-                high: match.price,
-                low: match.price,
-                close: match.price,
-                volume: 15,
-              },
-            ];
+        setChartSeries((prev) => {
+          if (
+            prev.symbol !== match.symbol ||
+            prev.timeframe !== selectedTimeframeRef.current ||
+            prev.candles.length === 0
+          ) {
+            return prev;
           }
-          const prevLast = prev[prev.length - 1];
-          const next =
-            prevLast && prevLast.close > 0 && Math.abs(match.price - prevLast.close) / prevLast.close > 0.08
-              ? prev.map((c) => {
-                  const r = match.price / prevLast.close;
-                  return {
-                    ...c,
-                    open: c.open * r,
-                    high: c.high * r,
-                    low: c.low * r,
-                    close: c.close * r,
-                  };
-                })
-              : [...prev];
-          const last = { ...next[next.length - 1] };
-          if (bucket > last.time) {
-            next.push({
-              time: bucket,
-              open: last.close,
-              high: Math.max(last.close, match.price),
-              low: Math.min(last.close, match.price),
-              close: match.price,
-              volume: 18,
-            });
-            return next.length > 64 ? next.slice(-64) : next;
+          // Do not overwrite real Binance klines with fallback simulated ticks
+          if (prev.source === 'binance' && match.source !== 'binance_live') {
+            return prev;
           }
-          last.close = match.price;
-          if (match.price > last.high) last.high = match.price;
-          if (match.price < last.low) last.low = match.price;
-          last.volume += 4;
-          next[next.length - 1] = last;
-          return next;
+          const updated = patchCandlesWithLiveTick(
+            prev.candles,
+            serverTime,
+            match.price,
+            prev.timeframe,
+            match.decimals
+          );
+          if (updated === prev.candles) return prev;
+          return { ...prev, candles: updated };
         });
       }
     };
@@ -611,23 +601,6 @@ export default function App() {
     });
 
     socket.on('market:ticks', handleTicks);
-    socket.on(
-      'market:history',
-      ({
-        symbol,
-        points,
-        candles: histCandles,
-      }: {
-        symbol: string;
-        points: PricePoint[];
-        candles?: CandlePoint[];
-      }) => {
-        if (symbol === selectedSymbolRef.current) {
-          setPriceHistory(points || []);
-          if (histCandles) setCandles(histCandles);
-        }
-      }
-    );
     socket.on('room:state', handleRoomState);
     socket.on('global:stats', setGlobalStats);
     socket.on('master_wallet:update', setMasterWallet);
@@ -660,23 +633,15 @@ export default function App() {
     let cancelled = false;
     (async () => {
       try {
-        const [roomRes, histRes] = await Promise.all([
-          fetch(
-            `/api/room?symbol=${encodeURIComponent(
-              selectedSymbol
-            )}&timeframe=${encodeURIComponent(
-              selectedTimeframe
-            )}&tierCents=${selectedTierCents}`
-          ),
-          fetch(`/api/markets/${encodeURIComponent(selectedSymbol)}/history`),
-        ]);
+        const roomRes = await fetch(
+          `/api/room?symbol=${encodeURIComponent(
+            selectedSymbol
+          )}&timeframe=${encodeURIComponent(
+            selectedTimeframe
+          )}&tierCents=${selectedTierCents}`
+        );
         if (!cancelled && roomRes.ok) {
           setRoomSnapshot(await roomRes.json());
-        }
-        if (!cancelled && histRes.ok) {
-          const h = await histRes.json();
-          setPriceHistory(h.points || []);
-          if (h.candles) setCandles(h.candles);
         }
       } catch {
         // handled via socket
@@ -687,6 +652,88 @@ export default function App() {
       cancelled = true;
     };
   }, [selectedSymbol, selectedTimeframe, selectedTierCents, connected]);
+
+  const hasTickers = tickers.length > 0;
+  const loadedKeyRef = useRef<string>('');
+
+  // Dedicated per-timeframe historical klines loader (independent of stake tier changes!)
+  useEffect(() => {
+    const ticker = tickersRef.current.find((t) => t.symbol === selectedSymbol) ?? null;
+    const isKnownCrypto = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT', 'XRP/USDT'].includes(
+      selectedSymbol
+    );
+    // Wait for bootstrap ticker price before synthesizing commodity candles
+    if (!isKnownCrypto && (!hasTickers || !ticker)) return;
+
+    const targetKey = `${selectedSymbol}|${selectedTimeframe}`;
+    if (loadedKeyRef.current === targetKey) return;
+
+    const seq = ++chartFetchSeqRef.current;
+    const controller = new AbortController();
+
+    const cached = getCachedTimeframeCandles(selectedSymbol, selectedTimeframe);
+    if (cached && cached.length >= 2) {
+      const shouldPatch =
+        ticker &&
+        ticker.price > 0 &&
+        (!isKnownCrypto || ticker.source === 'binance_live');
+      const patched = shouldPatch
+        ? patchCandlesWithLiveTick(
+            cached,
+            Date.now(),
+            ticker.price,
+            selectedTimeframe,
+            ticker.decimals
+          )
+        : cached;
+      loadedKeyRef.current = targetKey;
+      setChartLoading(false);
+      setChartSeries((prev) => ({
+        symbol: selectedSymbol,
+        timeframe: selectedTimeframe,
+        candles: patched,
+        source: isKnownCrypto ? 'binance' : 'synthetic',
+        version: prev.version + 1,
+      }));
+      return () => {
+        controller.abort();
+      };
+    }
+
+    setChartLoading(true);
+    fetchTimeframeCandles({
+      symbol: selectedSymbol,
+      binanceSymbol: ticker?.binanceSymbol,
+      timeframe: selectedTimeframe,
+      currentPrice: ticker?.price ?? 0,
+      decimals: ticker?.decimals ?? (selectedSymbol === 'XRP/USDT' ? 4 : 2),
+      isLivePrice: ticker?.source === 'binance_live',
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (seq !== chartFetchSeqRef.current) return;
+        loadedKeyRef.current = targetKey;
+        setChartSeries((prev) => ({
+          symbol: selectedSymbol,
+          timeframe: selectedTimeframe,
+          candles: res.candles,
+          source: res.source,
+          version: prev.version + 1,
+        }));
+      })
+      .catch((err: any) => {
+        if (err?.name === 'AbortError') return;
+      })
+      .finally(() => {
+        if (seq === chartFetchSeqRef.current) {
+          setChartLoading(false);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [selectedSymbol, selectedTimeframe, hasTickers]);
 
   useEffect(() => {
     if (activeTab === 'leaderboard') {
@@ -1055,16 +1102,18 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Hero Candlestick / Area Chart with Floating Live HUD */}
+                {/* Interactive TradingView Lightweight Charts Terminal */}
                 <PriceChart
                   mode={chartMode}
-                  points={priceHistory}
-                  candles={candles}
+                  candles={chartSeries.candles}
+                  timeframe={chartSeries.timeframe}
+                  datasetVersion={chartSeries.version}
+                  loading={chartLoading}
                   liveRound={roomSnapshot?.liveRound ?? null}
                   openRound={roomSnapshot?.openRound ?? null}
                   currentPrice={livePrice}
                   decimals={decimals}
-                  symbol={selectedSymbol}
+                  symbol={chartSeries.symbol}
                   nowMs={nowMs}
                   durationMs={currentTimeframeObj.durationMs}
                   userId={user?.id}
